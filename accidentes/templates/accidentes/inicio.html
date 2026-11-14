@@ -1,0 +1,250 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AccidentaData | Colombia</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            color: #172b42;
+        }
+
+        header {
+            background: #10243e;
+            color: white;
+            padding: 22px 8%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 26px;
+            font-weight: bold;
+        }
+
+        .logo span {
+            color: #38bdf8;
+        }
+
+        nav {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        nav a:hover {
+            color: #38bdf8;
+        }
+
+        .hero {
+            background: linear-gradient(120deg, #10243e, #17618b);
+            color: white;
+            padding: 100px 8%;
+        }
+
+        .hero h1 {
+            font-size: 45px;
+            max-width: 700px;
+            margin-bottom: 20px;
+        }
+
+        .hero p {
+            font-size: 18px;
+            line-height: 1.7;
+            max-width: 650px;
+            color: #dbeafe;
+        }
+
+        .hero button {
+            margin-top: 30px;
+            padding: 14px 25px;
+            background: #38bdf8;
+            border: none;
+            border-radius: 7px;
+            color: #10243e;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .container {
+            padding: 65px 8%;
+        }
+
+        .container h2 {
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+
+        .description {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 22px;
+            margin-top: 35px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px #0000000d;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card .icon {
+            font-size: 30px;
+            margin-bottom: 18px;
+        }
+
+        .card h3 {
+            color: #17618b;
+            margin-bottom: 12px;
+        }
+
+        .card p {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .notice {
+            margin-top: 35px;
+            padding: 20px;
+            background: #e0f2fe;
+            border-left: 4px solid #0284c7;
+            border-radius: 6px;
+            color: #164e63;
+        }
+
+        footer {
+            background: #10243e;
+            color: white;
+            text-align: center;
+            padding: 25px;
+        }
+
+        @media (max-width: 600px) {
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            header {
+                padding: 20px 5%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">Accidenta<span>Data</span></div>
+
+        <nav>
+            <a href="/">Inicio</a>
+            <a href="#estadisticas">Estadísticas</a>
+            <a href="#analisis">Análisis</a>
+            <a href="#prevencion">Prevención</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h1>Analizamos la accidentalidad vial en Colombia</h1>
+
+        <p>
+            Explora información sobre accidentes de tránsito,
+            víctimas, lesiones y fallecimientos. Identifica
+            tendencias y patrones para contribuir a la prevención vial.
+        </p>
+
+        <button onclick="document.getElementById('estadisticas').scrollIntoView({behavior:'smooth'})">
+            Explorar plataforma
+        </button>
+    </section>
+
+    <main class="container" id="estadisticas">
+        <h2>Bienvenido a AccidentaData</h2>
+
+        <p class="description">
+            Una plataforma de análisis de datos abiertos sobre
+            accidentalidad vial en el territorio colombiano.
+        </p>
+
+        <div class="cards">
+            <article class="card">
+                <div class="icon">📊</div>
+                <h3>Estadísticas</h3>
+                <p>
+                    Consulta información sobre accidentes,
+                    víctimas y fallecimientos.
+                </p>
+            </article>
+
+            <article class="card" id="analisis">
+                <div class="icon">📈</div>
+                <h3>Análisis de datos</h3>
+                <p>
+                    Identifica tendencias y comportamientos
+                    de la accidentalidad vial.
+                </p>
+            </article>
+
+            <article class="card">
+                <div class="icon">🗺️</div>
+                <h3>Mapa de Colombia</h3>
+                <p>
+                    Explora la distribución territorial de
+                    los registros disponibles.
+                </p>
+            </article>
+
+            <article class="card" id="prevencion">
+                <div class="icon">🛡️</div>
+                <h3>Prevención vial</h3>
+                <p>
+                    Identifica zonas y patrones que requieren
+                    atención preventiva.
+                </p>
+            </article>
+        </div>
+
+        <div class="notice">
+            <strong>Información importante:</strong>
+            Las estadísticas se conectarán posteriormente
+            con las fuentes oficiales de datos abiertos de Colombia.
+        </div>
+    </main>
+
+    <footer>
+        AccidentaData © 2026 | Análisis de accidentalidad vial en Colombia
+    </footer>
+
+</body>
+</html>
