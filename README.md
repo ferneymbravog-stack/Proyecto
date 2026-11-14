@@ -2,7 +2,7 @@
 
 Aplicación web desarrollada con **Python y Django** para consultar, procesar y visualizar datos abiertos relacionados con accidentalidad. El propósito es convertir datos públicos en información comprensible que ayude a los usuarios a explorar patrones y responder preguntas útiles.
 
-> El conjunto de datos definitivo, su entidad publicadora, cobertura y limitaciones deben quedar registrados aquí cuando el equipo confirme la fuente seleccionada en datos.gov.co. No se deben presentar hipótesis como necesidades validadas ni datos de ejemplo como datos reales.
+> Las fuentes de datos, sus entidades publicadoras, cobertura y limitaciones están documentadas en la sección [Fuente de datos](#fuente-de-datos) y en [`docs/data-sources.md`](docs/data-sources.md). No se deben presentar hipótesis como necesidades validadas ni datos de ejemplo como datos reales.
 
 ## Objetivo del Producto (Product Goal)
 
@@ -27,16 +27,18 @@ Todos participan en el descubrimiento, planificación, desarrollo y verificació
 
 El trabajo se organiza en ocho Issues. Cada Issue incluye objetivo, actividades, criterios de aceptación y responsables.
 
-| Issue | Trabajo | Responsables |
-|---|---|---|
-| [#1 Configuración Django e interfaz inicial](../../issues/1) | Configurar Django y construir la interfaz inicial | ferneymbravog-stack, Joel90900 |
-| [#2 Integración de datos abiertos](../../issues/2) | Integrar fuentes de datos abiertos | ferneymbravog-stack, jader-posso |
-| [#3 Procesamiento y limpieza](../../issues/3) | Procesar, limpiar y preparar los datos | ferneymbravog-stack, Joel90900 |
-| [#4 Filtros de búsqueda](../../issues/4) | Implementar búsqueda y filtros | Joel90900, jader-posso |
-| [#5 Panel de estadísticas](../../issues/5) | Construir el panel de estadísticas | Joel90900, ferneymbravog-stack |
-| [#6 Mapa interactivo](../../issues/6) | Incorporar mapa interactivo | Gonzalez82ZG, ferneymbravog-stack |
-| [#7 Pruebas y validación](../../issues/7) | Ejecutar pruebas y validar el funcionamiento | Gonzalez82ZG, jader-posso |
-| [#8 Documentación e integración](../../issues/8) | Consolidar documentación e integrar la entrega | Los cuatro integrantes |
+> **Importante: el código AD-xx y el número del Issue en GitHub son distintos.** En GitHub los Issues están numerados del #5 al #12, mientras que sus códigos van de AD-01 a AD-08. Para evitar confusiones, en commits, ramas y conversaciones del equipo use el código **AD-xx**. Para enlazar un Pull Request con su Issue use el número de GitHub: por ejemplo, AD-02 se enlaza con `Refs #6`, no con `Refs #2`. El texto de algunos Issues todavía cita sus dependencias con la numeración antigua ("Issue #1", "Issue #2"), que corresponde a AD-01 y AD-02.
+
+| Código | Issue en GitHub | Trabajo | Responsables |
+|---|---|---|---|
+| AD-01 | [#5](../../issues/5) | Configurar Django y construir la interfaz inicial | ferneymbravog-stack, Joel90900 |
+| AD-02 | [#6](../../issues/6) | Integrar fuentes de datos abiertos | ferneymbravog-stack, jader-posso |
+| AD-03 | [#7](../../issues/7) | Procesar, limpiar y preparar los datos | ferneymbravog-stack, Joel90900 |
+| AD-04 | [#8](../../issues/8) | Implementar búsqueda y filtros | Joel90900, jader-posso |
+| AD-05 | [#9](../../issues/9) | Construir el panel de estadísticas | Joel90900, ferneymbravog-stack |
+| AD-06 | [#10](../../issues/10) | Incorporar mapa interactivo | Gonzalez82ZG, ferneymbravog-stack |
+| AD-07 | [#11](../../issues/11) | Ejecutar pruebas y validar el funcionamiento | Gonzalez82ZG, jader-posso |
+| AD-08 | [#12](../../issues/12) | Consolidar documentación e integrar la entrega | Los cuatro integrantes |
 
 ## Product Backlog
 
@@ -80,15 +82,31 @@ La fusión de un Pull Request no significa automáticamente que el trabajo esté
 
 ## Fuente de datos
 
-- Portal: [datos.gov.co](https://www.datos.gov.co/)
-- Conjunto de datos: **Pendiente de confirmar por el equipo**
-- Entidad publicadora: **Pendiente**
-- URL directa del conjunto: **Pendiente**
-- Variables utilizadas: **Pendiente**
-- Cobertura y periodo: **Pendiente**
-- Limitaciones y calidad: **Pendiente**
+La aplicación consulta en tiempo real la API pública Socrata de [datos.gov.co](https://www.datos.gov.co/) (`https://www.datos.gov.co/resource/{id}.json`). Los metadatos de estas fuentes se verificaron el 13 de noviembre de 2026 en la ficha oficial de cada conjunto.
 
-La aplicación puede consumir una API o procesar un archivo CSV/JSON descargado. Ambas modalidades son válidas. Debe conservarse la atribución y explicarse si se utiliza una muestra.
+| Conjunto de datos | ID | Entidad publicadora | Cobertura y periodo | Actualización | Unidad de conteo |
+|---|---|---|---|---|---|
+| [Vehículos involucrados en un accidente de tránsito (Ley 2251 de 2022)](https://www.datos.gov.co/d/6jmc-vaxk) | `6jmc-vaxk` | Ministerio de Transporte (RUNT) | Nacional · ene. 2022 – sep. 2026 | Semestral | Vehículo involucrado |
+| [Homicidios en accidente de tránsito](https://www.datos.gov.co/d/ha6j-pa2r) | `ha6j-pa2r` | Dirección General de la Policía Nacional (DIJIN) | Nacional · ene. 2010 – jul. 2026 | Trimestral | Víctimas: suma de `cantidad` |
+| [Lesiones en accidentes de tránsito](https://www.datos.gov.co/d/ntej-qq7v) | `ntej-qq7v` | Ministerio de Defensa Nacional | Nacional · ene. 2003 – sep. 2026 | Mensual | Víctimas: suma de `cantidad` |
+
+Las tres fuentes se publican con licencia **CC BY-SA 4.0**, que exige citar la entidad de origen. La página **Fuentes de datos** (`/fuentes/`) muestra una muestra de 10 registros reales de cada conjunto, junto con su entidad, enlace, licencia y limitaciones.
+
+**Variables utilizadas**
+
+- **Vehículos:** `marca_vehiculo`, `modelo_vehiculo`, `tipo_vehiculo`, `edad_vehiculo`, `fecha_accidente`, `gravedad_accidente`, `departamento_accidente`, `municipio_accidente`, `autoridad_de_transito`.
+- **Homicidios:** `departamento`, `municipio`, `codigo_dane`, `armas_medios`, `fecha_hecho`, `genero`, `grupo_etar_o`, `descripci_n_conducta`, `cantidad`.
+- **Lesiones:** `fecha_hecho`, `cod_depto`, `departamento`, `cod_muni`, `municipio`, `cantidad`.
+
+**Limitaciones y calidad**
+
+- Las fuentes tienen unidades distintas (vehículos frente a víctimas) y no se deben sumar entre sí como si fueran una sola cifra de accidentes.
+- En homicidios y lesiones una fila puede representar más de una víctima: los totales se calculan sumando `cantidad`, no contando filas. Por ejemplo, lesiones tiene 644.042 filas, pero suman 885.829 víctimas.
+- Cada fuente usa un formato de fecha diferente: `MM/AAAA` (vehículos), `DD/MM/AAAA` como texto (homicidios) y fecha ISO (lesiones). Su normalización corresponde a AD-03.
+- Ninguna fuente incluye coordenadas; la ubicación llega como máximo a nivel de municipio. Para cruzar fuentes conviene usar los códigos DANE y no los nombres, porque las mayúsculas y las tildes varían.
+- La Policía Nacional advierte que sus cifras están sujetas a variación.
+
+El detalle de las reglas de interpretación está en [`docs/data-sources.md`](docs/data-sources.md).
 
 ## Flujo de colaboración GitHub
 
@@ -103,7 +121,15 @@ La aplicación puede consumir una API o procesar un archivo CSV/JSON descargado.
 
 ## Pruebas y validación
 
-Como mínimo, verificar manualmente el recorrido principal y un caso de búsqueda sin coincidencias o con datos incompletos. Ejecutar `python manage.py test` cuando existan pruebas automatizadas apropiadas y registrar el resultado real. No marcar pruebas como superadas si no se ejecutaron.
+Como mínimo, verificar manualmente el recorrido principal y un caso de búsqueda sin coincidencias o con datos incompletos. No marcar pruebas como superadas si no se ejecutaron.
+
+Las pruebas automatizadas se ejecutan con:
+
+```bash
+python manage.py test
+```
+
+Cubren el cliente de la API, el catálogo de fuentes, el servicio de muestras y las vistas: respuesta correcta, respuesta vacía, error de conexión, fuente inválida y caché. Las pruebas automatizadas no se conectan a internet; la consulta real a datos.gov.co se comprueba abriendo `/fuentes/` en el navegador.
 
 ## Entregables
 
@@ -118,18 +144,21 @@ Como mínimo, verificar manualmente el recorrido principal y un caso de búsqued
 
 ## Instalación y ejecución
 
-Completar estos pasos cuando el equipo confirme la estructura y dependencias del proyecto. Como referencia general:
+Requisitos: **Python 3.12 o superior** (Django 6.1 no funciona con versiones anteriores) y conexión a internet para consultar datos.gov.co.
 
 ```bash
 python -m venv .venv
-# Activar el entorno virtual según el sistema operativo
+# Windows (PowerShell):  .venv\Scripts\activate
+# Linux / macOS:         source .venv/bin/activate
 python -m pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
 ```
 
-Abrir http://127.0.0.1:8000/ en el navegador.
+Abrir http://127.0.0.1:8000/ en el navegador. La página de fuentes está en http://127.0.0.1:8000/fuentes/.
+
+Opcional: datos.gov.co limita las consultas anónimas. Para un uso frecuente, crear un *app token* gratuito en el portal y definirlo en la variable de entorno `SOCRATA_APP_TOKEN` antes de iniciar el servidor. El token no debe subirse al repositorio.
 
 ---
 
-**Estado del proyecto:** planificación e Issues iniciales registrados. Completar los datos de la fuente, validar cada criterio y actualizar los estados conforme avance el trabajo.
+**Estado del proyecto:** AD-01 (#5) terminado. AD-02 (#6) implementado: la aplicación consulta datos reales de tres fuentes de datos.gov.co, identifica su procedencia, maneja errores y respuestas vacías y documenta variables y limitaciones; falta su revisión e integración mediante Pull Request. AD-03 a AD-08 (#7 a #12) están pendientes.
