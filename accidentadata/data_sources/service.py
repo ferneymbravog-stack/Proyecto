@@ -5,6 +5,7 @@ en un resultado que la interfaz puede mostrar sin interrumpir la aplicación.
 """
 
 from dataclasses import dataclass, field
+from typing import List
 
 from .catalog import DATASETS
 from .socrata_client import SocrataClient, SocrataError
@@ -23,6 +24,7 @@ class SampleResult:
     dataset: dict
     records: list = field(default_factory=list)
     columns: list = field(default_factory=list)
+    raw_records: list = field(default_factory=list)
     error: str = ""
 
     @property
@@ -61,4 +63,10 @@ def fetch_sample(key, limit=DEFAULT_SAMPLE_SIZE, client=None):
         columns = sorted({name for record in records for name in record})
     rows = [[record.get(name, "") for name in columns] for record in records]
 
-    return SampleResult(key=key, dataset=dataset, records=rows, columns=columns)
+    return SampleResult(
+        key=key,
+        dataset=dataset,
+        records=rows,
+        columns=columns,
+        raw_records=records,
+    )
