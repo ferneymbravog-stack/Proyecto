@@ -177,6 +177,169 @@
             margin-top: 5px;
         }
 
+        .stat-card .stat-sub {
+            font-size: 12px;
+            color: #475569;
+            margin-top: 6px;
+        }
+
+        .stat-card .stat-value.stat-value-text {
+            font-size: 19px;
+            line-height: 1.25;
+            word-break: break-word;
+        }
+
+        .stats-panel {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 22px;
+            margin: 22px 0;
+            box-shadow: 0 4px 16px rgba(16, 36, 62, 0.05);
+        }
+
+        .stats-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-bottom: 14px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .stats-panel-header h3 {
+            font-size: 20px;
+            color: #10243e;
+            margin-bottom: 4px;
+        }
+
+        .stats-panel-subtitle {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .stats-context-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .context-badge {
+            background: #f1f5f9;
+            color: #1e293b;
+            border: 1px solid #cbd5e1;
+            border-radius: 999px;
+            padding: 5px 12px;
+            font-size: 12px;
+        }
+
+        .stats-context-note {
+            font-size: 13px;
+            color: #475569;
+            background: #f8fafc;
+            border-left: 3px solid #0284c7;
+            padding: 10px 14px;
+            border-radius: 4px;
+            margin: 12px 0 18px;
+            line-height: 1.5;
+        }
+
+        .stats-empty-state {
+            background: #f8fafc;
+            border: 1px dashed #94a3b8;
+            border-radius: 8px;
+            padding: 18px;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .stats-empty-context {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 6px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
+            margin-top: 16px;
+        }
+
+        .breakdown-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        .breakdown-card h4 {
+            font-size: 15px;
+            color: #10243e;
+            margin-bottom: 4px;
+        }
+
+        .breakdown-meta {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .breakdown-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 8px;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .breakdown-label {
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        .breakdown-label small {
+            color: #64748b;
+            font-weight: normal;
+        }
+
+        .breakdown-value {
+            color: #0369a1;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .bar-track {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0284c7, #38bdf8);
+            border-radius: 999px;
+        }
+
+        .breakdown-footnote {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
         .notice {
             margin-top: 30px;
             padding: 18px 20px;
@@ -277,6 +440,7 @@
 
         <nav>
             <a href="{% url 'inicio' %}">Inicio</a>
+            <a href="{% url 'estadisticas' %}">Estadísticas</a>
             <a href="{% url 'fuentes' %}">Fuentes de datos</a>
         </nav>
     </header>
@@ -323,6 +487,9 @@
                     <div class="notice info">
                         La fuente respondió correctamente, pero no devolvió registros.
                     </div>
+                    {% if stats_summary %}
+                        {% include "accidentes/includes/stats_panel.html" %}
+                    {% endif %}
                 {% else %}
 
                     <!-- Selector de modo: Procesado vs Crudo -->
@@ -367,6 +534,10 @@
                             códigos DANE desglosados en departamento y municipio DIVIPOLA, y valores nulos
                             reemplazados de manera segura y predecible.
                         </p>
+
+                        {% if stats_summary %}
+                            {% include "accidentes/includes/stats_panel.html" %}
+                        {% endif %}
 
                         <div class="table-wrapper">
                             <table>

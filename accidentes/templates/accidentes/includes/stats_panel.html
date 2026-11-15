@@ -1,0 +1,101 @@
+{% load l10n %}
+<section class="stats-panel" aria-labelledby="resumen-estadistico">
+    <div class="stats-panel-header">
+        <div>
+            <h3 id="resumen-estadistico">Resumen estadístico</h3>
+            <p class="stats-panel-subtitle">
+                Indicadores calculados exclusivamente con los registros reales consultados.
+            </p>
+        </div>
+        <div class="stats-context-badges">
+            <span class="context-badge">
+                <strong>Unidad:</strong> {{ stats_summary.unit_label }}
+            </span>
+            <span class="context-badge">
+                <strong>Periodo observado:</strong> {{ stats_summary.period_label }}
+            </span>
+            <span class="context-badge">
+                <strong>Entidad:</strong> {{ stats_summary.publisher }}
+            </span>
+        </div>
+    </div>
+
+    {% if stats_summary.is_empty %}
+        <div class="stats-empty-state" role="status">
+            <strong>Sin datos para resumir.</strong>
+            <p>{{ stats_summary.empty_message }}</p>
+            {% if stats_summary.context_note %}
+                <p class="stats-empty-context">Unidad esperada: {{ stats_summary.context_note }}</p>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{{ stats_summary.total_metric }}</div>
+                <div class="stat-label">{{ stats_summary.unit_label }}</div>
+                <div class="stat-sub">En {{ stats_summary.total_records }} registros consultados</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats_summary.avg_metric_per_record }}</div>
+                <div class="stat-label">Promedio por registro</div>
+                <div class="stat-sub">{{ stats_summary.unit_plural }} / registro</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats_summary.unique_departments }} / {{ stats_summary.unique_municipalities }}</div>
+                <div class="stat-label">Cobertura geográfica reportada</div>
+                <div class="stat-sub">Departamentos / municipios distintos</div>
+            </div>
+            {% if stats_summary.top_department %}
+                <div class="stat-card">
+                    <div class="stat-value stat-value-text">{{ stats_summary.top_department.label }}</div>
+                    <div class="stat-label">Departamento principal</div>
+                    <div class="stat-sub">
+                        {{ stats_summary.top_department.count }} {{ stats_summary.unit_plural }} ({{ stats_summary.top_department.percentage }}%)
+                    </div>
+                </div>
+            {% endif %}
+            {% if stats_summary.avg_vehicle_age is not None %}
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats_summary.avg_vehicle_age }} años</div>
+                    <div class="stat-label">Edad promedio del vehículo</div>
+                    <div class="stat-sub">Calculado sobre {{ stats_summary.vehicle_age_count }} vehículos con edad válida</div>
+                </div>
+            {% endif %}
+        </div>
+
+        <p class="stats-context-note">{{ stats_summary.context_note }}</p>
+
+        {% if stats_summary.breakdowns %}
+            <div class="summary-grid">
+                {% for group in stats_summary.breakdowns %}
+                    <article class="breakdown-card">
+                        <h4>{{ group.title }}</h4>
+                        <p class="breakdown-meta">{{ group.description }} · Unidad: {{ group.unit }}</p>
+                        <ul class="breakdown-list">
+                            {% for item in group.items %}
+                                <li class="breakdown-item">
+                                    <div class="breakdown-row">
+                                        <span class="breakdown-label">
+                                            {{ item.label }}{% if item.context %} <small>({{ item.context }})</small>{% endif %}
+                                        </span>
+                                        <span class="breakdown-value">
+                                            {{ item.count }} {{ group.unit }} ({{ item.percentage }}%)
+                                        </span>
+                                    </div>
+                                    <div class="bar-track" aria-hidden="true">
+                                        <div class="bar-fill" style="width: {{ item.percentage|unlocalize }}%;"></div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        {% if group.total_categories > group.items|length %}
+                            <p class="breakdown-footnote">
+                                Mostrando los primeros {{ group.items|length }} de {{ group.total_categories }} valores distintos.
+                            </p>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endif %}
+</section>
