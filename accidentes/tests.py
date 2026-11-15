@@ -18,6 +18,7 @@ class InicioViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, reverse('fuentes'))
+        self.assertContains(response, reverse('estadisticas'))
 
 
 class FuentesViewTests(TestCase):
@@ -64,6 +65,9 @@ class FuentesViewTests(TestCase):
         self.assertContains(response, 'Datos procesados y normalizados')
         self.assertContains(response, 'Registros procesados')
         self.assertContains(response, 'Víctimas reportadas')
+        self.assertContains(response, 'Resumen estadístico')
+        self.assertContains(response, 'Víctimas lesionadas')
+        self.assertContains(response, '2026-09-30')
         self.assertContains(response, '<td>CALI</td>', html=True)
 
     @patch('accidentes.views.fetch_sample')
@@ -100,6 +104,8 @@ class FuentesViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'no devolvió registros')
+        self.assertContains(response, 'Resumen estadístico')
+        self.assertContains(response, 'Sin datos para resumir.')
 
     @patch('accidentes.views.fetch_sample')
     def test_unknown_source_returns_404_with_escaped_message(self, mocked_fetch):
@@ -128,6 +134,44 @@ class FuentesViewTests(TestCase):
         self.client.get(reverse('fuentes'), {'fuente': 'police_injuries'})
 
         self.assertEqual(mocked_fetch.call_count, 2)
+
+
+class EstadisticasViewTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    @patch('accidentes.views.fetch_sample')
+    def test_default_estadisticas_loads_first_dataset(self, mocked_fetch):
+        mocked_fetch.return_value = sample(
+            'runt_vehicles',
+            columns=['departamento_accidente', 'municipio_accidente', 'fecha_accidente'],
+            records=[['ANTIOQUIA', 'MEDELLIN', '09/2026']],
+        )
+
+        response = self.client.get(reverse('estadisticas'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Panel de estadísticas')
+        self.assertContains(response, 'Resumen estadístico')
+        self.assertContains(response, 'Vehículos involucrados')
+        self.assertContains(response, 'ANTIOQUIA')
+
+    @patch('accidentes.views.fetch_sample')
+    def test_estadisticas_handles_empty_dataset(self, mocked_fetch):
+        mocked_fetch.return_value = sample('police_injuries')
+
+        response = self.client.get(reverse('estadisticas'), {'fuente': 'police_injuries'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Sin datos para resumir.')
+
+    @patch('accidentes.views.fetch_sample')
+    def test_estadisticas_unknown_source_returns_404(self, mocked_fetch):
+        response = self.client.get(reverse('estadisticas'), {'fuente': 'no_existe'})
+
+        self.assertEqual(response.status_code, 404)
+        self.assertContains(response, 'Fuente no encontrada', status_code=404)
+        mocked_fetch.assert_not_called()
 
 
 class BuscarViewTests(TestCase):
@@ -266,6 +310,6 @@ class BuscarViewTests(TestCase):
         self.assertEqual(mocked_search.call_count, 1)
 
     def test_navigation_links_to_search(self):
-        for name in ('inicio', 'fuentes'):
+        for name in ('inicio', 'fuentes', 'estadisticas'):
             with self.subTest(page=name):
                 self.assertContains(self.client.get(reverse(name)), reverse('buscar'))

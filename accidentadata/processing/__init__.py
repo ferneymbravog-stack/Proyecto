@@ -15,6 +15,12 @@ from .service import (
     fetch_processed_sample,
     process_records,
 )
+from .statistics import (
+    BreakdownGroup,
+    CategoryStat,
+    StatisticalSummary,
+    build_statistical_summary,
+)
 from .transformers import (
     clean_record,
     clean_records,
@@ -40,4 +46,8 @@ __all__ = [
     "calculate_stats",
     "process_records",
     "fetch_processed_sample",
+    "CategoryStat",
+    "BreakdownGroup",
+    "StatisticalSummary",
+    "build_statistical_summary",
 ]

@@ -168,8 +168,8 @@
         <div class="logo">Accidenta<span>Data</span></div>
 
         <nav>
-            <a href="/">Inicio</a>
-            <a href="#estadisticas">Estadísticas</a>
+            <a href="{% url 'inicio' %}">Inicio</a>
+            <a href="{% url 'estadisticas' %}">Estadísticas</a>
             <a href="#analisis">Análisis</a>
             <a href="#prevencion">Prevención</a>
             <a href="{% url 'fuentes' %}">Fuentes de datos</a>
@@ -207,6 +207,9 @@
                     Consulta información sobre accidentes,
                     víctimas y fallecimientos.
                 </p>
+                <p style="margin-top: 12px;">
+                    <a href="{% url 'estadisticas' %}" style="color: #0284c7; font-weight: bold; text-decoration: none;">Ver panel estadístico →</a>
+                </p>
             </article>
 
             <article class="card" id="analisis">
@@ -239,8 +242,8 @@
 
         <div class="notice">
             <strong>Información importante:</strong>
-            Las estadísticas se conectarán posteriormente
-            con las fuentes oficiales de datos abiertos de Colombia.
+            Consulta las fuentes oficiales de datos abiertos de Colombia y su resumen estadístico
+            en tiempo real en la sección <a href="{% url 'fuentes' %}">Fuentes de datos</a>.
         </div>
     </main>
 

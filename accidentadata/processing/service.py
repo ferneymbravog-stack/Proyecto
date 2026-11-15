@@ -16,6 +16,7 @@ from accidentadata.data_sources.service import (
 )
 from accidentadata.data_sources.socrata_client import SocrataClient, SocrataError
 
+from .statistics import StatisticalSummary, build_statistical_summary
 from .transformers import clean_records
 
 
@@ -38,6 +39,7 @@ class ProcessedSampleResult:
     table_rows: list = field(default_factory=list)
     columns: list = field(default_factory=list)
     stats: QualityStats = field(default_factory=QualityStats)
+    summary: Optional[StatisticalSummary] = None
     error: str = ""
 
     @property
@@ -93,10 +95,12 @@ def process_records(key: str, raw_records: List[Any], dataset: Optional[dict] = 
             columns=[],
             table_rows=[],
             stats=QualityStats(),
+            summary=build_statistical_summary(key, [], dataset=dataset),
         )
 
     cleaned = clean_records(key, dict_records)
     stats = calculate_stats(key, cleaned)
+    summary = build_statistical_summary(key, cleaned, dataset=dataset)
 
     # Definir columnas de la tabla procesada en un orden claro y legible
     if cleaned:
@@ -118,6 +122,7 @@ def process_records(key: str, raw_records: List[Any], dataset: Optional[dict] = 
         table_rows=table_rows,
         columns=columns,
         stats=stats,
+        summary=summary,
     )
 
 
@@ -141,6 +146,7 @@ def fetch_processed_sample(
             dataset=dataset,
             error=str(error),
             stats=QualityStats(),
+            summary=build_statistical_summary(key, [], dataset=dataset),
         )
 
     return process_records(key, raw_records, dataset=dataset)
