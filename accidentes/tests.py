@@ -128,3 +128,144 @@ class FuentesViewTests(TestCase):
         self.client.get(reverse('fuentes'), {'fuente': 'police_injuries'})
 
         self.assertEqual(mocked_fetch.call_count, 2)
+
+
+class BuscarViewTests(TestCase):
+    def setUp(self):
+        cache.clear()
+
+    def result(self, key='police_injuries', **kwargs):
+        from accidentadata.search.service import SearchResult
+        defaults = {'key': key, 'dataset': DATASETS[key], 'metric_label': 'Víctimas'}
+        defaults.update(kwargs)
+        return SearchResult(**defaults)
+
+    @patch('accidentes.views.search')
+    def test_without_source_asks_to_choose_one(self, mocked_search):
+        response = self.client.get(reverse('buscar'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Selecciona una fuente')
+        mocked_search.assert_not_called()
+
+    @patch('accidentes.views.search')
+    def test_choosing_source_shows_its_filters_without_searching(self, mocked_search):
+        response = self.client.get(reverse('buscar'), {'fuente': 'runt_vehicles'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="gravedad_accidente"')
+        self.assertContains(response, 'name="tipo_vehiculo"')
+        self.assertNotContains(response, 'name="genero"')
+        mocked_search.assert_not_called()
+
+    @patch('accidentes.views.search')
+    def test_search_shows_totals_rows_and_active_filters(self, mocked_search):
+        mocked_search.return_value = self.result(
+            total_rows=45, metric_total=52, pages=3, page=1,
+            columns=['municipio', 'cantidad'], rows=[['CALI', 2]],
+        )
+
+        response = self.client.get(reverse('buscar'), {
+            'fuente': 'police_injuries', 'buscar': '1', 'departamento': '76', 'anio': '2024',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        criteria = mocked_search.call_args.args[1]
+        self.assertEqual(criteria.departamento, '76')
+        self.assertEqual(criteria.anio, 2024)
+        self.assertContains(response, '<td>CALI</td>', html=True)
+        self.assertContains(response, 'Departamento: Valle del Cauca')
+        self.assertContains(response, 'Año: 2024')
+        self.assertContains(response, 'Siguiente')
+        self.assertContains(response, DATASETS['police_injuries']['source_url'])
+
+    @patch('accidentes.views.search')
+    def test_no_matches_shows_clear_message(self, mocked_search):
+        mocked_search.return_value = self.result(total_rows=0)
+
+        response = self.client.get(reverse('buscar'), {
+            'fuente': 'police_injuries', 'buscar': '1', 'municipio': 'zzz',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'No hay registros que coincidan con estos filtros.')
+
+    @patch('accidentes.views.search')
+    def test_api_error_is_shown_without_failing(self, mocked_search):
+        mocked_search.return_value = self.result(error='No fue posible conectar con datos.gov.co.')
+
+        response = self.client.get(reverse('buscar'), {'fuente': 'police_injuries', 'buscar': '1'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'No fue posible realizar la búsqueda.')
+
+    @patch('accidentes.views.search')
+    def test_invalid_inputs_show_errors_and_skip_search(self, mocked_search):
+        cases = [
+            {'municipio': "x' OR 1=1"},
+            {'departamento': '00'},
+            {'anio': '1990'},
+            {'anio': 'abc'},
+            {'genero': 'OTRO'},
+        ]
+        for params in cases:
+            with self.subTest(params=params):
+                data = {'fuente': 'police_fatalities', 'buscar': '1', **params}
+                response = self.client.get(reverse('buscar'), data)
+
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, 'Revisa los filtros')
+                self.assertNotContains(response, 'Select a valid choice')
+        mocked_search.assert_not_called()
+
+    def test_field_errors_are_in_spanish(self):
+        response = self.client.get(reverse('buscar'), {
+            'fuente': 'police_fatalities', 'buscar': '1', 'anio': '1990', 'municipio': 'a' * 41,
+        })
+
+        self.assertContains(response, 'Selecciona una opción de la lista.')
+        self.assertContains(response, 'Escribe como máximo 40 caracteres.')
+
+    @patch('accidentes.views.search')
+    def test_unknown_source_returns_404(self, mocked_search):
+        response = self.client.get(reverse('buscar'), {'fuente': '<b>x</b>', 'buscar': '1'})
+
+        self.assertEqual(response.status_code, 404)
+        self.assertContains(response, '&lt;b&gt;x&lt;/b&gt;', status_code=404)
+        mocked_search.assert_not_called()
+
+    @patch('accidentes.views.search')
+    def test_invalid_page_falls_back_to_first(self, mocked_search):
+        mocked_search.return_value = self.result(total_rows=1, pages=1, rows=[['CALI']], columns=['municipio'])
+
+        self.client.get(reverse('buscar'), {'fuente': 'police_injuries', 'buscar': '1', 'pagina': 'abc'})
+
+        self.assertEqual(mocked_search.call_args.kwargs['page'], 1)
+
+    @patch('accidentes.views.search')
+    def test_pagination_links_keep_filters(self, mocked_search):
+        mocked_search.return_value = self.result(
+            total_rows=60, pages=3, page=2, rows=[['CALI']], columns=['municipio'],
+        )
+
+        response = self.client.get(reverse('buscar'), {
+            'fuente': 'police_injuries', 'buscar': '1', 'departamento': '76', 'pagina': '2',
+        })
+
+        self.assertContains(response, 'departamento=76&amp;pagina=1')
+        self.assertContains(response, 'departamento=76&amp;pagina=3')
+
+    @patch('accidentes.views.search')
+    def test_successful_search_is_cached(self, mocked_search):
+        mocked_search.return_value = self.result(total_rows=1, pages=1, rows=[['CALI']], columns=['municipio'])
+        params = {'fuente': 'police_injuries', 'buscar': '1', 'departamento': '76'}
+
+        self.client.get(reverse('buscar'), params)
+        self.client.get(reverse('buscar'), params)
+
+        self.assertEqual(mocked_search.call_count, 1)
+
+    def test_navigation_links_to_search(self):
+        for name in ('inicio', 'fuentes'):
+            with self.subTest(page=name):
+                self.assertContains(self.client.get(reverse(name)), reverse('buscar'))

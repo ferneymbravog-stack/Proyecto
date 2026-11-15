@@ -70,6 +70,21 @@ Se admiten paginación mediante `$limit` y `$offset`, además de filtros Socrata
    - Conteo oficial según la unidad de cada fuente (suma de víctimas para homicidios y lesiones, vehículos involucrados para el RUNT).
    - Indicadores de completitud de fechas y ubicaciones geográficas.
 
+## Búsqueda y filtros (AD-04)
+
+- `accidentadata/search/config.py`: filtros de cada fuente, lista de departamentos por código DANE y la escritura exacta que usa cada fuente para cada departamento.
+- `accidentadata/search/query.py`: construye la cláusula `$where` de SoQL solo con valores validados (listas cerradas o texto que pasó por una lista blanca de caracteres).
+- `accidentadata/search/service.py`: cuenta las coincidencias en la fuente completa (`count(*)` y `sum(cantidad::number)`) y trae la página pedida ordenada por `:id`, para que la paginación sea estable.
+- Página `/buscar/`: formulario por fuente, resultados paginados de 20 en 20, mensajes de sin coincidencias, entradas inválidas y error de conexión. Las búsquedas correctas se guardan en caché durante 10 minutos.
+
+Decisiones y limitaciones:
+
+- **Departamento por nombre, no por código:** en homicidios hay registros con departamento "VALLE" cuyo `codigo_dane` empieza por 25 (Cundinamarca). Filtrar por nombre garantiza que la columna departamento de los resultados coincida con el filtro elegido.
+- **Año:** en vehículos y homicidios la fecha es texto, por lo que el año se filtra con `like '%/AAAA'`; en lesiones se usa un rango de fechas real.
+- **Municipio:** la búsqueda es por el inicio del nombre y no distingue mayúsculas ni tildes: cada vocal se reemplaza por el comodín `_` de SoQL. Por eso "cajibio" encuentra "Cajibío". Una "n" escrita en lugar de "ñ" no encuentra la "ñ".
+- **Totales en homicidios:** `cantidad` se publica como texto, por eso se suma con `cantidad::number`.
+- Las consultas se verificaron contra la API real el 14 de noviembre de 2026. Por ejemplo, lesiones en Valle del Cauca durante 2024: 6.039 registros y 6.160 víctimas.
+
 ## Primera validación técnica
 
 1. ~~Consultar una muestra pequeña de cada conjunto.~~ Hecho.

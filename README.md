@@ -108,6 +108,24 @@ Las tres fuentes se publican con licencia **CC BY-SA 4.0**, que exige citar la e
 
 El detalle de las reglas de interpretación está en [`docs/data-sources.md`](docs/data-sources.md).
 
+## Búsqueda y filtros
+
+La página **Buscar** (`/buscar/`) permite consultar cada fuente completa en datos.gov.co, no solo una muestra. El usuario elige la fuente y combina los filtros disponibles:
+
+| Filtro | Vehículos (RUNT) | Homicidios | Lesiones |
+|---|---|---|---|
+| Departamento (lista de los 33 departamentos) | ✓ | ✓ | ✓ |
+| Municipio (inicio del nombre, sin importar tildes ni mayúsculas) | ✓ | ✓ | ✓ |
+| Año | 2022 – 2026 | 2010 – 2026 | 2003 – 2026 |
+| Gravedad (con heridos / con muertos) | ✓ | | |
+| Tipo de vehículo | ✓ | | |
+| Género | | ✓ | |
+| Grupo de edad | | ✓ | |
+
+Los resultados muestran cuántos registros coinciden en toda la fuente y su total en la unidad de conteo de la fuente (vehículos o víctimas), los filtros aplicados y los registros normalizados con el procesamiento de AD-03, en páginas de 20. Cuando no hay coincidencias, la página lo indica con un mensaje; los valores no válidos se señalan junto al campo y la búsqueda no se envía a la API.
+
+Cada fuente escribe los departamentos de forma diferente (por ejemplo "VALLE", "VALLE DEL CAUCA", "BOGOTA" o "BOGOTA D.C."). Por eso el usuario elige el departamento de una lista común y la aplicación lo traduce a la escritura exacta de cada fuente.
+
 ## Flujo de colaboración GitHub
 
 **Issue → Branch → Commit → Pull Request → Review → Check → Merge → DoD → Done**
@@ -129,7 +147,7 @@ Las pruebas automatizadas se ejecutan con:
 python manage.py test
 ```
 
-Cubren el cliente de la API, el catálogo de fuentes, el servicio de muestras y las vistas: respuesta correcta, respuesta vacía, error de conexión, fuente inválida y caché. Las pruebas automatizadas no se conectan a internet; la consulta real a datos.gov.co se comprueba abriendo `/fuentes/` en el navegador.
+Cubren el cliente de la API, el catálogo de fuentes, el servicio de muestras, el procesamiento de datos, la búsqueda y las vistas: respuesta correcta, respuesta vacía, búsqueda sin coincidencias, error de conexión, fuente o filtros inválidos, paginación y caché. Las pruebas automatizadas no se conectan a internet; la consulta real a datos.gov.co se comprueba abriendo `/fuentes/` y `/buscar/` en el navegador.
 
 ## Entregables
 
@@ -155,10 +173,10 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-Abrir http://127.0.0.1:8000/ en el navegador. La página de fuentes está en http://127.0.0.1:8000/fuentes/.
+Abrir http://127.0.0.1:8000/ en el navegador. La página de fuentes está en http://127.0.0.1:8000/fuentes/ y la de búsqueda en http://127.0.0.1:8000/buscar/.
 
 Opcional: datos.gov.co limita las consultas anónimas. Para un uso frecuente, crear un *app token* gratuito en el portal y definirlo en la variable de entorno `SOCRATA_APP_TOKEN` antes de iniciar el servidor. El token no debe subirse al repositorio.
 
 ---
 
-**Estado del proyecto:** AD-01 (#5) terminado. AD-02 (#6) y AD-03 (#7) implementados: la aplicación consulta datos reales de tres fuentes de datos.gov.co, identifica su procedencia, procesa y normaliza tipos de datos, fechas y códigos DANE, maneja errores y valores ausentes de forma predecible y permite visualizar tanto datos procesados con métricas de calidad como datos originales. AD-04 a AD-08 (#8 a #12) son los siguientes en la planificación.
+**Estado del proyecto:** AD-01 (#5) terminado. AD-02 (#6) y AD-03 (#7) implementados: la aplicación consulta datos reales de tres fuentes de datos.gov.co, identifica su procedencia, procesa y normaliza tipos de datos, fechas y códigos DANE, maneja errores y valores ausentes de forma predecible y permite visualizar tanto datos procesados con métricas de calidad como datos originales. AD-04 (#8) implementado: búsqueda y filtros sobre las fuentes completas, con mensajes para búsquedas sin coincidencias y entradas inválidas; pendiente de revisión mediante Pull Request. AD-05 a AD-08 (#9 a #12) son los siguientes en la planificación.

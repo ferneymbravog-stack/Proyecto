@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar registros | AccidentaData</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            color: #172b42;
+        }
+
+        header {
+            background: #10243e;
+            color: white;
+            padding: 22px 8%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 26px;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: #38bdf8;
+        }
+
+        nav {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        nav a:hover {
+            color: #38bdf8;
+        }
+
+        .container {
+            padding: 50px 8%;
+        }
+
+        h1 {
+            font-size: 30px;
+            margin-bottom: 12px;
+        }
+
+        h2 {
+            font-size: 22px;
+            margin: 35px 0 12px;
+        }
+
+        .description {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 22px;
+            margin-top: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px #0000000d;
+            border: 1px solid #e2e8f0;
+        }
+
+        .card.selected {
+            border: 2px solid #17618b;
+        }
+
+        .card h3 {
+            color: #17618b;
+            margin-bottom: 10px;
+            font-size: 17px;
+        }
+
+        .card p,
+        .card li {
+            color: #475569;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .card a.button {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 18px;
+            background: #38bdf8;
+            border-radius: 7px;
+            color: #10243e;
+            font-weight: bold;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .view-modes {
+            display: flex;
+            gap: 12px;
+            margin: 25px 0 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .mode-btn {
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: none;
+            background: #e2e8f0;
+            color: #1e293b;
+            border: 1px solid #cbd5e1;
+            transition: all 0.2s;
+        }
+
+        .mode-btn:hover {
+            background: #cbd5e1;
+        }
+
+        .mode-btn.active {
+            background: #0284c7;
+            color: white;
+            border-color: #0284c7;
+            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 18px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+
+        .stat-card .stat-value {
+            font-size: 26px;
+            font-weight: bold;
+            color: #0284c7;
+        }
+
+        .stat-card .stat-label {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 5px;
+        }
+
+        .notice {
+            margin-top: 30px;
+            padding: 18px 20px;
+            border-radius: 6px;
+            line-height: 1.6;
+        }
+
+        .notice.info {
+            background: #e0f2fe;
+            border-left: 4px solid #0284c7;
+            color: #164e63;
+        }
+
+        .notice.success {
+            background: #f0fdf4;
+            border-left: 4px solid #16a34a;
+            color: #14532d;
+        }
+
+        .notice.error {
+            background: #fee2e2;
+            border-left: 4px solid #dc2626;
+            color: #7f1d1d;
+        }
+
+        .notice ul {
+            margin: 8px 0 0 20px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 15px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 13px;
+        }
+
+        th,
+        td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: #10243e;
+            font-weight: 600;
+        }
+
+        td.null-val {
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .source {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .source a {
+            color: #17618b;
+        }
+
+        footer {
+            background: #10243e;
+            color: white;
+            text-align: center;
+            padding: 25px;
+            margin-top: 40px;
+        }
+
+        .search-form {
+            margin-top: 25px;
+            padding: 25px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px #0000000d;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 18px;
+        }
+
+        .form-field label {
+            display: block;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .form-field input,
+        .form-field select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .form-field .help {
+            display: block;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .form-field .field-error {
+            display: block;
+            margin-top: 5px;
+            font-size: 13px;
+            color: #b91c1c;
+        }
+
+        .form-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .form-actions button {
+            padding: 11px 22px;
+            background: #38bdf8;
+            border: none;
+            border-radius: 7px;
+            color: #10243e;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .form-actions a {
+            color: #17618b;
+            font-size: 14px;
+        }
+
+        .chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .chip {
+            background: #e0f2fe;
+            color: #164e63;
+            border-radius: 999px;
+            padding: 5px 12px;
+            font-size: 13px;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .pagination a {
+            color: #17618b;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            header {
+                padding: 20px 5%;
+            }
+
+            .container {
+                padding: 35px 5%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="logo" href="{% url 'inicio' %}">Accidenta<span>Data</span></a>
+
+        <nav>
+            <a href="{% url 'inicio' %}">Inicio</a>
+            <a href="{% url 'fuentes' %}">Fuentes de datos</a>
+            <a href="{% url 'buscar' %}">Buscar</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <h1>Buscar registros</h1>
+
+        <p class="description">
+            Elige una fuente y filtra sus registros por ubicación, año y otras
+            características. La búsqueda se hace sobre la fuente completa en
+            <a href="https://www.datos.gov.co/">datos.gov.co</a>, no solo sobre una muestra.
+        </p>
+
+        {% if invalid %}
+            <div class="notice error" role="alert">
+                <strong>Fuente no encontrada:</strong>
+                «{{ invalid }}» no corresponde a ninguna fuente registrada.
+                Elige una de las opciones disponibles.
+            </div>
+        {% endif %}
+
+        <div class="view-modes" role="navigation" aria-label="Fuente de datos">
+            {% for key, dataset in datasets.items %}
+                <a class="mode-btn{% if key == selected %} active{% endif %}"
+                   href="?fuente={{ key }}"{% if key == selected %} aria-current="page"{% endif %}>
+                    {{ dataset.name }}
+                </a>
+            {% endfor %}
+        </div>
+
+        {% if not selected %}
+            <div class="notice info">
+                Selecciona una fuente para ver sus filtros.
+            </div>
+        {% endif %}
+
+        {% if form %}
+            <form class="search-form" method="get" action="{% url 'buscar' %}" novalidate>
+                <input type="hidden" name="fuente" value="{{ selected }}">
+                <input type="hidden" name="buscar" value="1">
+
+                {% if form.non_field_errors %}
+                    <div class="notice error" role="alert">
+                        {% for error in form.non_field_errors %}{{ error }} {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="form-grid">
+                    {% for field in form %}
+                        <div class="form-field">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <span class="help">{{ field.help_text }}</span>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <span class="field-error" role="alert">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit">Buscar</button>
+                    <a href="?fuente={{ selected }}">Limpiar filtros</a>
+                </div>
+            </form>
+
+            {% if form.is_bound and form.errors %}
+                <div class="notice error" role="alert">
+                    <strong>Revisa los filtros:</strong> hay valores no válidos y la búsqueda no se realizó.
+                </div>
+            {% endif %}
+        {% endif %}
+
+        {% if result %}
+            <section aria-labelledby="resultados">
+                <h2 id="resultados">Resultados</h2>
+
+                {% if active_filters %}
+                    <div class="chips" aria-label="Filtros aplicados">
+                        {% for label, value in active_filters %}
+                            <span class="chip">{{ label }}: {{ value }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="description">Sin filtros: se muestran todos los registros de la fuente.</p>
+                {% endif %}
+
+                {% if result.error %}
+                    <div class="notice error" role="alert">
+                        <strong>No fue posible realizar la búsqueda.</strong>
+                        {{ result.error }} Intenta de nuevo en unos minutos.
+                    </div>
+                {% elif result.no_matches %}
+                    <div class="notice info" role="status">
+                        <strong>No hay registros que coincidan con estos filtros.</strong>
+                        Prueba con menos filtros, otro año u otro departamento.
+                        Recuerda que el municipio se busca por el inicio del nombre.
+                    </div>
+                {% else %}
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">{{ result.total_rows }}</div>
+                            <div class="stat-label">Registros encontrados</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">{{ result.metric_total }}</div>
+                            <div class="stat-label">{{ result.metric_label }}</div>
+                        </div>
+                    </div>
+
+                    <p class="description">
+                        Mostrando registros {{ result.first_row }} a {{ result.last_row }}
+                        de {{ result.total_rows }}, con los datos normalizados.
+                    </p>
+
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    {% for column in result.columns %}
+                                        <th scope="col">{{ column }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in result.rows %}
+                                    <tr>
+                                        {% for value in row %}
+                                            <td{% if value == '—' or value == 'NO REPORTADO' %} class="null-val"{% endif %}>{{ value }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if result.pages > 1 %}
+                        <nav class="pagination" aria-label="Paginación">
+                            {% if result.page > 1 %}
+                                <a href="?{{ querystring }}&amp;pagina={{ result.page|add:'-1' }}">← Anterior</a>
+                            {% endif %}
+                            <span>Página {{ result.page }} de {{ result.pages }}</span>
+                            {% if result.page < result.pages %}
+                                <a href="?{{ querystring }}&amp;pagina={{ result.page|add:'1' }}">Siguiente →</a>
+                            {% endif %}
+                        </nav>
+                    {% endif %}
+                {% endif %}
+
+                <div class="notice info">
+                    <strong>Cómo interpretar estos resultados:</strong>
+                    {{ result.dataset.count_unit }}
+                </div>
+
+                <p class="source">
+                    Fuente: {{ result.dataset.publisher }} ·
+                    <a href="{{ result.dataset.source_url }}">{{ result.dataset.name }}</a>
+                    (ID {{ result.dataset.dataset_id }}) · Licencia {{ result.dataset.license }}.
+                </p>
+            </section>
+        {% endif %}
+    </main>
+
+    <footer>
+        AccidentaData © 2026 | Análisis de accidentalidad vial en Colombia
+    </footer>
+
+</body>
+</html>
