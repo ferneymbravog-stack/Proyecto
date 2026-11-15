@@ -119,6 +119,64 @@
             font-size: 14px;
         }
 
+        .view-modes {
+            display: flex;
+            gap: 12px;
+            margin: 25px 0 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .mode-btn {
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: none;
+            background: #e2e8f0;
+            color: #1e293b;
+            border: 1px solid #cbd5e1;
+            transition: all 0.2s;
+        }
+
+        .mode-btn:hover {
+            background: #cbd5e1;
+        }
+
+        .mode-btn.active {
+            background: #0284c7;
+            color: white;
+            border-color: #0284c7;
+            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 18px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+
+        .stat-card .stat-value {
+            font-size: 26px;
+            font-weight: bold;
+            color: #0284c7;
+        }
+
+        .stat-card .stat-label {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 5px;
+        }
+
         .notice {
             margin-top: 30px;
             padding: 18px 20px;
@@ -130,6 +188,12 @@
             background: #e0f2fe;
             border-left: 4px solid #0284c7;
             color: #164e63;
+        }
+
+        .notice.success {
+            background: #f0fdf4;
+            border-left: 4px solid #16a34a;
+            color: #14532d;
         }
 
         .notice.error {
@@ -167,6 +231,12 @@
         th {
             background: #f1f5f9;
             color: #10243e;
+            font-weight: 600;
+        }
+
+        td.null-val {
+            color: #94a3b8;
+            font-style: italic;
         }
 
         .source {
@@ -217,7 +287,7 @@
         <p class="description">
             AccidentaData consulta en tiempo real conjuntos de datos públicos de
             <a href="https://www.datos.gov.co/">datos.gov.co</a>. Selecciona una
-            fuente para ver una muestra de registros reales y su procedencia.
+            fuente para ver una muestra de registros y su procesamiento normalizado.
         </p>
 
         {% if invalid %}
@@ -235,7 +305,7 @@
                     <p><strong>Entidad:</strong> {{ dataset.publisher }}</p>
                     <p><strong>Cobertura:</strong> {{ dataset.coverage }}</p>
                     <p><strong>Actualización:</strong> {{ dataset.frequency }}</p>
-                    <a class="button" href="?fuente={{ key }}">Ver muestra</a>
+                    <a class="button" href="?fuente={{ key }}&modo={{ modo }}">Ver muestra</a>
                 </article>
             {% endfor %}
         </div>
@@ -254,31 +324,101 @@
                         La fuente respondió correctamente, pero no devolvió registros.
                     </div>
                 {% else %}
-                    <p class="description">
-                        Primeros {{ result.records|length }} registros, tal como los
-                        publica la entidad (sin limpieza ni transformación).
-                    </p>
 
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    {% for column in result.columns %}
-                                        <th scope="col">{{ column }}</th>
-                                    {% endfor %}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in result.records %}
+                    <!-- Selector de modo: Procesado vs Crudo -->
+                    <div class="view-modes" role="tablist" aria-label="Modo de visualización">
+                        <a class="mode-btn{% if modo == 'procesado' %} active{% endif %}"
+                           href="?fuente={{ selected }}&modo=procesado">
+                            ✨ Datos procesados y normalizados (AD-03)
+                        </a>
+                        <a class="mode-btn{% if modo == 'crudo' %} active{% endif %}"
+                           href="?fuente={{ selected }}&modo=crudo">
+                            📄 Datos originales (crudos)
+                        </a>
+                    </div>
+
+                    {% if modo == 'procesado' and processed_result %}
+                        <!-- Métricas de calidad y procesamiento -->
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value">{{ processed_result.stats.total_records }}</div>
+                                <div class="stat-label">Registros procesados</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">{{ processed_result.stats.total_metric }}</div>
+                                <div class="stat-label">{{ processed_result.stats.metric_label }}</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">{{ processed_result.stats.valid_dates_count }}/{{ processed_result.stats.total_records }}</div>
+                                <div class="stat-label">Fechas estandarizadas (ISO)</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">{{ processed_result.stats.complete_geo_count }}/{{ processed_result.stats.total_records }}</div>
+                                <div class="stat-label">Ubicación completa (Dpto + Muni)</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">{{ processed_result.stats.missing_values_handled }}</div>
+                                <div class="stat-label">Valores ausentes tratados</div>
+                            </div>
+                        </div>
+
+                        <p class="description">
+                            Registros normalizados: limpieza de texto, fechas estandarizadas en formato ISO,
+                            códigos DANE desglosados en departamento y municipio DIVIPOLA, y valores nulos
+                            reemplazados de manera segura y predecible.
+                        </p>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
                                     <tr>
-                                        {% for value in row %}
-                                            <td>{{ value|default:"—" }}</td>
+                                        {% for column in processed_result.columns %}
+                                            <th scope="col">{{ column }}</th>
                                         {% endfor %}
                                     </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody>
+                                    {% for row in processed_result.table_rows %}
+                                        <tr>
+                                            {% for value in row %}
+                                                <td{% if value == '—' or value == 'NO REPORTADO' %} class="null-val"{% endif %}>
+                                                    {{ value }}
+                                                </td>
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <!-- Visualización de datos crudos -->
+                        <p class="description">
+                            Primeros {{ result.records|length }} registros, tal como los
+                            publica la entidad (sin limpieza ni transformación).
+                        </p>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        {% for column in result.columns %}
+                                            <th scope="col">{{ column }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in result.records %}
+                                        <tr>
+                                            {% for value in row %}
+                                                <td>{{ value|default:"—" }}</td>
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+
                 {% endif %}
 
                 <div class="notice info">

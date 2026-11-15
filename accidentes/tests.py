@@ -51,6 +51,36 @@ class FuentesViewTests(TestCase):
         self.assertContains(response, DATASETS['police_injuries']['limitations'][0])
 
     @patch('accidentes.views.fetch_sample')
+    def test_shows_processed_mode_with_stats(self, mocked_fetch):
+        mocked_fetch.return_value = sample(
+            'police_injuries',
+            columns=['municipio', 'cantidad', 'cod_muni', 'fecha_hecho'],
+            records=[['cali', '3', '76001', '2026-09-30T00:00:00.000']],
+        )
+
+        response = self.client.get(reverse('fuentes'), {'fuente': 'police_injuries', 'modo': 'procesado'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Datos procesados y normalizados')
+        self.assertContains(response, 'Registros procesados')
+        self.assertContains(response, 'Víctimas reportadas')
+        self.assertContains(response, '<td>CALI</td>', html=True)
+
+    @patch('accidentes.views.fetch_sample')
+    def test_shows_raw_mode_when_selected(self, mocked_fetch):
+        mocked_fetch.return_value = sample(
+            'police_injuries',
+            columns=['municipio', 'cantidad'],
+            records=[['cali_crudo', '1']],
+        )
+
+        response = self.client.get(reverse('fuentes'), {'fuente': 'police_injuries', 'modo': 'crudo'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'sin limpieza ni transformación')
+        self.assertContains(response, '<td>cali_crudo</td>', html=True)
+
+    @patch('accidentes.views.fetch_sample')
     def test_api_error_is_shown_without_failing(self, mocked_fetch):
         mocked_fetch.return_value = sample(
             'runt_vehicles', error='No fue posible conectar con datos.gov.co.'
