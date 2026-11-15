@@ -51,7 +51,24 @@ Se admiten paginación mediante `$limit` y `$offset`, además de filtros Socrata
 - `accidentadata/data_sources/catalog.py`: metadatos de cada fuente (entidad, cobertura, campos, unidad de conteo, limitaciones y enlace).
 - `accidentadata/data_sources/socrata_client.py`: cliente HTTP con validación de parámetros y errores controlados.
 - `accidentadata/data_sources/service.py`: obtiene una muestra de una fuente del catálogo. Los errores de conexión o de formato se devuelven como mensaje, sin interrumpir la aplicación.
-- Página `/fuentes/`: lista las fuentes y, con `?fuente=<clave>`, muestra 10 registros reales sin transformar, junto con su procedencia y limitaciones. Las muestras correctas se guardan en caché durante 10 minutos. Una clave inexistente responde 404 con un mensaje.
+- `accidentadata/processing/cleaners.py`: funciones puras de limpieza de textos, números, fechas y códigos DIVIPOLA/DANE.
+- `accidentadata/processing/transformers.py`: transformadores específicos por fuente (`transform_runt_vehicle`, `transform_police_fatality`, `transform_police_injury`).
+- `accidentadata/processing/service.py`: servicio reutilizable de procesamiento y cálculo de métricas de calidad (`process_records`, `fetch_processed_sample`, `calculate_stats`).
+- Página `/fuentes/`: lista las fuentes y, con `?fuente=<clave>`, permite alternar entre la vista de datos procesados/normalizados (modo por defecto) y datos originales crudos (`modo=crudo`). Las muestras correctas se guardan en caché durante 10 minutos.
+
+## Limpieza y normalización de datos (AD-03)
+
+1. **Tipos de datos y formatos inconsistentes:**
+   - **Fechas:** Estandarización a ISO. RUNT (`MM/AAAA`) se normaliza a `AAAA-MM` y extrae año y mes; DIJIN (`DD/MM/AAAA`) y Mindefensa (`ISO con hora`) se normalizan a `AAAA-MM-DD` y extraen año, mes y día.
+   - **Cantidades:** Conversión estricta de cadenas de texto a enteros positivos (`int`). En caso de valores inválidos o nulos, se aplica fallback predecible de 1 víctima por fila de incidente.
+   - **Geografía:** Normalización de departamentos y municipios a mayúsculas limpias, eliminando sufijos como `(CT)` y espacios repetidos.
+   - **Códigos DANE:** Extracción del código DIVIPOLA de 5 dígitos para municipios y de 2 dígitos para departamentos a partir del código de 8 dígitos de la Policía Nacional (`19130000` -> dpto `19`, muni `19130`), y relleno con ceros a la izquierda para fuentes con códigos de longitud variable.
+2. **Valores ausentes o inválidos:**
+   - Cadenas vacías o representaciones comunes de ausencia (`SIN INFORMACION`, `NO APLICA`, `null`, `nan`, etc.) se convierten de forma predecible en `NO REPORTADO` o `—`.
+   - Números fuera de rango (como modelos de vehículos `<= 1900` o edades negativas) se filtran de forma no bloqueante o se calculan consistentemente (`anio_accidente - modelo_vehiculo`).
+3. **Métricas de calidad calculadas:**
+   - Conteo oficial según la unidad de cada fuente (suma de víctimas para homicidios y lesiones, vehículos involucrados para el RUNT).
+   - Indicadores de completitud de fechas y ubicaciones geográficas.
 
 ## Primera validación técnica
 

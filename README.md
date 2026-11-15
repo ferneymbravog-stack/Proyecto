@@ -161,4 +161,4 @@ Opcional: datos.gov.co limita las consultas anónimas. Para un uso frecuente, cr
 
 ---
 
-**Estado del proyecto:** AD-01 (#5) terminado. AD-02 (#6) implementado: la aplicación consulta datos reales de tres fuentes de datos.gov.co, identifica su procedencia, maneja errores y respuestas vacías y documenta variables y limitaciones; falta su revisión e integración mediante Pull Request. AD-03 a AD-08 (#7 a #12) están pendientes.
+**Estado del proyecto:** AD-01 (#5) terminado. AD-02 (#6) y AD-03 (#7) implementados: la aplicación consulta datos reales de tres fuentes de datos.gov.co, identifica su procedencia, procesa y normaliza tipos de datos, fechas y códigos DANE, maneja errores y valores ausentes de forma predecible y permite visualizar tanto datos procesados con métricas de calidad como datos originales. AD-04 a AD-08 (#8 a #12) son los siguientes en la planificación.
