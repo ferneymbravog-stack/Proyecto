@@ -152,3 +152,48 @@ def buscar(request):
     context['result'] = result
     context['active_filters'] = form.active_filters()
     return render(request, 'accidentes/buscar.html', context)
+
+
+
+from accidentadata.data_sources.catalog import DATASETS
+from accidentadata.data_sources.service import DEFAULT_SAMPLE_SIZE, fetch_sample
+from accidentadata.processing.service import process_records
+from accidentadata.geography.service import build_municipality_summary
+from accidentadata.search.query import InvalidCriteriaError
+from accidentadata.search.service import search
+
+
+def mapa(request):
+    """Muestra información geográfica de accidentalidad."""
+
+    available_sources = [
+        "police_fatalities",
+        "police_injuries",
+    ]
+
+    selected = request.GET.get(
+        "fuente", "police_injuries"
+    ).strip()
+
+    if selected not in available_sources:
+        selected = "police_injuries"
+
+    result, processed_result, stats_summary = _load_source_data(selected)
+
+    records = (
+        processed_result.records
+        if processed_result and not result.error
+        else []
+    )
+
+    geographic_data = build_municipality_summary(records)
+
+    context = {
+        "datasets": DATASETS,
+        "selected": selected,
+        "municipalities": geographic_data["municipalities"],
+        "without_location": geographic_data["without_location"],
+        "error": result.error if result else "",
+    }
+
+    return render(request, "accidentes/mapa.html", context)
