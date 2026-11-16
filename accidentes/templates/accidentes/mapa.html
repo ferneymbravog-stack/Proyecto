@@ -1,0 +1,519 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa geográfico | AccidentaData</title>
+
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            color: #172b42;
+        }
+
+        header {
+            background: #10243e;
+            color: white;
+            padding: 22px 8%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 26px;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: #38bdf8;
+        }
+
+        nav {
+            display: flex;
+            gap: 22px;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        nav a:hover,
+        nav a.active {
+            color: #38bdf8;
+        }
+
+        .container {
+            padding: 45px 8%;
+        }
+
+        h1 {
+            font-size: 30px;
+            margin-bottom: 12px;
+        }
+
+        .description {
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .filters {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            flex-wrap: wrap;
+            box-shadow: 0 3px 12px rgba(0,0,0,.04);
+        }
+
+        select {
+            padding: 12px 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: white;
+            min-width: 250px;
+            font-size: 14px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,.04);
+            border-left: 4px solid #0284c7;
+        }
+
+        .card h3 {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 12px;
+        }
+
+        .card strong {
+            font-size: 30px;
+            color: #10243e;
+        }
+
+        .map-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 12px rgba(0,0,0,.04);
+        }
+
+        .map-section h2,
+        .table-section h2 {
+            font-size: 21px;
+            margin-bottom: 10px;
+        }
+
+        .section-description {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        #map {
+            height: 480px;
+            width: 100%;
+            border-radius: 10px;
+            z-index: 1;
+        }
+
+        .table-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,.04);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 18px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .empty {
+            padding: 25px;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .warning {
+            background: #fff7ed;
+            color: #9a3412;
+            border: 1px solid #fed7aa;
+            border-radius: 9px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        @media(max-width: 750px) {
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                padding: 20px 5%;
+            }
+
+            .container {
+                padding: 30px 5%;
+            }
+
+            #map {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <a href="{% url 'inicio' %}" class="logo">
+        Accidenta<span>Data</span>
+    </a>
+
+    <nav>
+        <a href="{% url 'inicio' %}">Inicio</a>
+        <a href="{% url 'fuentes' %}">Fuentes</a>
+        <a href="{% url 'estadisticas' %}">Estadísticas</a>
+        <a href="{% url 'buscar' %}">Buscar</a>
+        <a href="{% url 'mapa' %}" class="active">Mapa</a>
+    </nav>
+</header>
+
+<main class="container">
+
+    <h1>Mapa geográfico de accidentalidad</h1>
+
+    <p class="description">
+        Explora la distribución territorial de las víctimas de accidentes
+        de tránsito en Colombia mediante información de fuentes oficiales.
+    </p>
+
+    {% if error %}
+        <div class="warning">
+            No fue posible cargar la fuente de datos: {{ error }}
+        </div>
+    {% endif %}
+
+    <section class="filters">
+
+        <div>
+            <h3>Fuente de información</h3>
+            <p class="section-description">
+                Selecciona el conjunto de datos que deseas consultar.
+            </p>
+        </div>
+
+        <form method="GET">
+            <select name="fuente" onchange="this.form.submit()">
+
+                <option value="police_injuries"
+                    {% if selected == 'police_injuries' %}selected{% endif %}>
+                    Lesiones en accidentes de tránsito
+                </option>
+
+                <option value="police_fatalities"
+                    {% if selected == 'police_fatalities' %}selected{% endif %}>
+                    Homicidios en accidentes de tránsito
+                </option>
+
+            </select>
+        </form>
+
+    </section>
+
+    <section class="cards">
+
+        <article class="card">
+            <h3>Municipios identificados</h3>
+            <strong>{{ municipalities|length }}</strong>
+        </article>
+
+        <article class="card">
+            <h3>Total de víctimas</h3>
+            <strong id="totalVictimas">0</strong>
+        </article>
+
+        <article class="card">
+            <h3>Registros sin ubicación</h3>
+            <strong>{{ without_location }}</strong>
+        </article>
+
+    </section>
+
+    <section class="map-section">
+
+        <h2>Distribución geográfica</h2>
+
+        <p class="section-description">
+            Consulta los municipios identificados en los registros.
+            Los marcadores representan ubicaciones municipales.
+        </p>
+
+        <div id="map"></div>
+
+    </section>
+
+    <section class="table-section">
+
+        <h2>Municipios registrados</h2>
+
+        <p class="section-description">
+            Resumen de víctimas agrupadas por código DANE.
+        </p>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Código DANE</th>
+                    <th>Municipio</th>
+                    <th>Departamento</th>
+                    <th>Total de víctimas</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for item in municipalities %}
+                <tr>
+                    <td>{{ item.codigo_dane }}</td>
+                    <td>{{ item.municipio }}</td>
+                    <td>{{ item.departamento }}</td>
+                    <td>{{ item.total }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="empty">
+                        No hay información geográfica disponible.
+                    </td>
+                </tr>
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </section>
+
+</main>
+
+<footer>
+    AccidentaData Colombia | Plataforma de análisis de accidentalidad vial
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    const municipalities = [
+        {% for item in municipalities %}
+        {
+            codigo: "{{ item.codigo_dane|escapejs }}",
+            municipio: "{{ item.municipio|escapejs }}",
+            departamento: "{{ item.departamento|escapejs }}",
+            total: {{ item.total|default:0 }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    const total = municipalities.reduce(
+        (sum, item) => sum + item.total, 0
+    );
+
+    document.getElementById("totalVictimas").textContent =
+        total.toLocaleString("es-CO");
+
+    const map = L.map("map").setView([4.5709, -74.2973], 5);
+
+   map.getContainer().style.backgroundColor = "#f1f5f9";
+   
+    // Relacionar los datos de accidentalidad con los códigos DANE
+    const accidentData = new Map(
+        municipalities.map(item => [
+            String(item.codigo).padStart(5, "0"),
+            item
+        ])
+    );
+
+    // Servicio geográfico de municipios basado en cartografía DANE
+  const geoJsonUrl =
+    "https://raw.githubusercontent.com/ytolosa/mapas-colombia/main/output/geojson/col_municipios_inset_nacional.geojson";
+
+    function getColor(value) {
+        if (value === 0) return "#e2e8f0";
+        if (value <= 10) return "#bae6fd";
+        if (value <= 50) return "#38bdf8";
+        if (value <= 100) return "#0284c7";
+        return "#075985";
+    }
+
+  function municipalityStyle(feature) {
+    const code = String(
+        feature.properties.divipola_mun || ""
+    ).padStart(5, "0");
+
+    const item = accidentData.get(code);
+    const value = item ? Number(item.total) : 0;
+
+    return {
+        fillColor: getColor(value),
+        weight: 0.7,
+        opacity: 1,
+        color: "#64748b",
+        fillOpacity: item ? 0.8 : 0.25
+    };
+}
+
+    fetch(geoJsonUrl)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("No se pudo descargar la cartografía.");
+            }
+            return response.json();
+        })
+        .then(data => {
+            const municipalityLayer = L.geoJSON(data, {
+                style: municipalityStyle,
+
+                onEachFeature: function(feature, layer) {
+                    const code = String(
+    feature.properties.divipola_mun || ""
+).padStart(5, "0");
+
+                    const item = accidentData.get(code);
+
+                    const name =
+    item?.municipio ||
+    feature.properties.mpio_nombre ||
+    "Municipio";
+
+const department =
+    item?.departamento ||
+    feature.properties.dpto_nombre ||
+    "No reportado";
+
+                    const victims = item
+                        ? Number(item.total).toLocaleString("es-CO")
+                        : "Sin registros en la muestra";
+
+                    layer.bindPopup(`
+                        <strong>${name}</strong><br>
+                        Departamento: ${department}<br>
+                        Código DANE: ${code}<br>
+                        Víctimas: ${victims}
+                    `);
+
+                    layer.on("mouseover", function() {
+                        layer.setStyle({
+                            weight: 2,
+                            color: "#10243e",
+                            fillOpacity: 0.95
+                        });
+                    });
+
+                    layer.on("mouseout", function() {
+                        municipalityLayer.resetStyle(layer);
+                    });
+                }
+            }).addTo(map);
+
+            map.fitBounds(municipalityLayer.getBounds());
+        })
+        .catch(error => {
+    console.error("ERROR REAL DEL MAPA:", error);
+    console.error("Mensaje:", error.message);
+    console.error("Ubicación:", error.stack);
+
+    document.getElementById("map").innerHTML =
+        `<div style="padding:20px;color:#b91c1c">
+            <strong>No fue posible cargar el mapa.</strong>
+            <p>${error.message}</p>
+        </div>`;
+});
+    // Leyenda
+    const legend = L.control({ position: "bottomright" });
+
+    legend.onAdd = function() {
+        const div = L.DomUtil.create("div", "info legend");
+
+        div.style.background = "white";
+        div.style.padding = "12px";
+        div.style.borderRadius = "8px";
+        div.style.lineHeight = "23px";
+
+        div.innerHTML = `
+            <strong>Víctimas registradas</strong><br>
+            <i style="background:#e2e8f0;width:12px;height:12px;display:inline-block"></i> Sin registros<br>
+            <i style="background:#bae6fd;width:12px;height:12px;display:inline-block"></i> 1 - 10<br>
+            <i style="background:#38bdf8;width:12px;height:12px;display:inline-block"></i> 11 - 50<br>
+            <i style="background:#0284c7;width:12px;height:12px;display:inline-block"></i> 51 - 100<br>
+            <i style="background:#075985;width:12px;height:12px;display:inline-block"></i> Más de 100
+        `;
+
+        return div;
+    };
+
+    legend.addTo(map);
+
+    </script>
+</body>
+</html>
