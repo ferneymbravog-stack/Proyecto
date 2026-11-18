@@ -1,162 +1,635 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AccidentaData | Colombia</title>
+    <title>AccidentaData | Analítica Vial de Colombia</title>
+    <!-- Leaflet CSS para visualización territorial -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 
     <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --primary-light: #38bdf8;
+            --primary-glow: rgba(56, 189, 248, 0.25);
+            --bg-dark: #0b1526;
+            --bg-dark-card: #112240;
+            --surface: #ffffff;
+            --surface-alt: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-light: #e2e8f0;
+            --border-subtle: #cbd5e1;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
             background: #f4f7fb;
-            color: #172b42;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* Animaciones */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        @keyframes floatEffect {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes shine {
+            to { background-position: 200% center; }
         }
 
         header {
-            background: #10243e;
+            background: rgba(11, 21, 38, 0.95);
+            backdrop-filter: blur(12px);
             color: white;
-            padding: 22px 8%;
+            padding: 18px 8%;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         }
 
         .logo {
             font-size: 26px;
-            font-weight: bold;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: white;
         }
 
         .logo span {
-            color: #38bdf8;
+            color: var(--primary-light);
+            text-shadow: 0 0 16px var(--primary-glow);
+        }
+
+        .system-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #34d399;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulseDot 2s infinite ease-in-out;
         }
 
         nav {
             display: flex;
-            gap: 25px;
+            gap: 22px;
+            align-items: center;
             flex-wrap: wrap;
         }
 
         nav a {
-            color: white;
+            color: #cbd5e1;
             text-decoration: none;
             font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s, transform 0.2s;
+            position: relative;
+            padding: 4px 0;
         }
 
         nav a:hover {
-            color: #38bdf8;
+            color: var(--primary-light);
         }
 
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0%;
+            height: 2px;
+            background: var(--primary-light);
+            transition: width 0.2s ease;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero */
         .hero {
-            background: linear-gradient(120deg, #10243e, #17618b);
+            background: linear-gradient(135deg, #0b1526 0%, #0d2847 50%, #134e73 100%);
             color: white;
-            padding: 100px 8%;
+            padding: 90px 8% 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: #7dd3fc;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            animation: fadeIn 0.6s ease-out;
         }
 
         .hero h1 {
-            font-size: 45px;
-            max-width: 700px;
+            font-size: 46px;
+            max-width: 760px;
             margin-bottom: 20px;
+            line-height: 1.15;
+            font-weight: 800;
+            letter-spacing: -1px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .hero h1 span.gradient-text {
+            background: linear-gradient(90deg, #38bdf8, #818cf8, #38bdf8);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 4s linear infinite;
         }
 
         .hero p {
             font-size: 18px;
             line-height: 1.7;
-            max-width: 650px;
+            max-width: 680px;
             color: #dbeafe;
+            animation: fadeIn 1s ease-out;
         }
 
-        .hero button {
-            margin-top: 30px;
-            padding: 14px 25px;
-            background: #38bdf8;
+        .hero-actions {
+            margin-top: 36px;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            animation: fadeIn 1.2s ease-out;
+        }
+
+        .btn-primary {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
             border: none;
-            border-radius: 7px;
-            color: #10243e;
-            font-weight: bold;
+            border-radius: 9px;
+            color: #0b1526;
+            font-weight: 700;
+            font-size: 15px;
             cursor: pointer;
+            box-shadow: 0 10px 25px rgba(2, 132, 199, 0.35);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 30px rgba(2, 132, 199, 0.5);
+            background: linear-gradient(135deg, #7dd3fc 0%, #0369a1 100%);
+        }
+
+        .btn-secondary {
+            padding: 14px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 9px;
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(8px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* KPI Counters Section */
+        .kpi-section {
+            padding: 0 8%;
+            margin-top: -35px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 14px;
+            padding: 22px 24px;
+            box-shadow: 0 10px 30px rgba(16, 36, 62, 0.08);
+            border: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.25s, box-shadow 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 4px;
+            width: 100%;
+            background: linear-gradient(90deg, #38bdf8, #0284c7);
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 16px 36px rgba(16, 36, 62, 0.12);
+        }
+
+        .kpi-number {
+            font-size: 32px;
+            font-weight: 800;
+            color: #0369a1;
+            letter-spacing: -0.5px;
+        }
+
+        .kpi-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 4px;
+        }
+
+        .kpi-sub {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        /* Contenedor Principal */
         .container {
-            padding: 65px 8%;
+            padding: 60px 8% 70px;
+        }
+
+        .section-header {
+            margin-bottom: 30px;
+        }
+
+        .section-tag {
+            color: var(--primary);
+            text-transform: uppercase;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            display: block;
         }
 
         .container h2 {
-            font-size: 28px;
-            margin-bottom: 12px;
+            font-size: 30px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.5px;
         }
 
         .description {
             color: #64748b;
             line-height: 1.6;
+            font-size: 16px;
+            max-width: 720px;
+            margin-top: 8px;
         }
 
+        /* Demo Stepper Tour */
+        .tour-section {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid var(--border-light);
+            padding: 32px;
+            margin: 40px 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+        }
+
+        .tour-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .tour-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tour-badge {
+            background: #e0f2fe;
+            color: #0369a1;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 999px;
+        }
+
+        .tour-steps-nav {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            scrollbar-width: thin;
+        }
+
+        .tour-btn {
+            background: #f1f5f9;
+            border: 1px solid var(--border-subtle);
+            padding: 10px 18px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tour-btn:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .tour-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+        }
+
+        .tour-content-panel {
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            padding: 24px;
+            margin-top: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .tour-details h4 {
+            font-size: 18px;
+            color: #0f172a;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .tour-details p {
+            color: #475569;
+            font-size: 14px;
+            line-height: 1.6;
+            max-width: 600px;
+        }
+
+        .tour-criteria {
+            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #0369a1;
+            background: #e0f2fe;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .tour-action-btn {
+            padding: 11px 20px;
+            background: #0284c7;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .tour-action-btn:hover {
+            background: #0369a1;
+            transform: translateY(-2px);
+        }
+
+        /* Tarjetas de Módulos */
         .cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 22px;
             margin-top: 35px;
         }
 
         .card {
             background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 5px 20px #0000000d;
-            border: 1px solid #e2e8f0;
-            transition: transform 0.2s;
+            padding: 28px;
+            border-radius: 14px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--border-light);
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
         }
 
         .card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-6px);
+            box-shadow: 0 16px 32px rgba(16, 36, 62, 0.09);
+            border-color: #cbd5e1;
         }
 
         .card .icon {
-            font-size: 30px;
-            margin-bottom: 18px;
+            font-size: 32px;
+            margin-bottom: 16px;
+            background: #f0f9ff;
+            width: 58px;
+            height: 58px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
         }
 
         .card h3 {
-            color: #17618b;
-            margin-bottom: 12px;
+            color: #0369a1;
+            font-size: 19px;
+            margin-bottom: 10px;
+            font-weight: 700;
         }
 
         .card p {
             color: #64748b;
             line-height: 1.6;
+            font-size: 14px;
+        }
+
+        /* Mapa Interactivo Preview */
+        .map-section {
+            margin: 45px 0 20px;
+            background: white;
+            border-radius: 16px;
+            border: 1px solid var(--border-light);
+            padding: 26px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+        }
+
+        .map-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .map-header h3 {
+            font-size: 20px;
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        #colombia-map-preview {
+            height: 380px;
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            z-index: 1;
         }
 
         .notice {
             margin-top: 35px;
-            padding: 20px;
+            padding: 20px 24px;
             background: #e0f2fe;
             border-left: 4px solid #0284c7;
-            border-radius: 6px;
-            color: #164e63;
+            border-radius: 8px;
+            color: #0c4a6e;
+            font-size: 14px;
+            line-height: 1.6;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .notice a {
+            color: #0284c7;
+            font-weight: 700;
+            text-decoration: underline;
         }
 
         footer {
-            background: #10243e;
-            color: white;
+            background: #0b1526;
+            color: #94a3b8;
             text-align: center;
-            padding: 25px;
+            padding: 30px;
+            font-size: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
         }
 
-        @media (max-width: 600px) {
+        footer a {
+            color: #38bdf8;
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
             .hero h1 {
                 font-size: 32px;
             }
 
             header {
-                padding: 20px 5%;
+                padding: 16px 5%;
+            }
+
+            .container, .hero, .kpi-section {
+                padding-left: 5%;
+                padding-right: 5%;
             }
         }
     </style>
@@ -165,10 +638,17 @@
 <body>
 
     <header>
-        <div class="logo">Accidenta<span>Data</span></div>
+        <a href="{% url 'inicio' %}" class="logo">
+            Accidenta<span>Data</span>
+        </a>
+
+        <div class="system-status">
+            <span class="status-dot"></span>
+            API Socrata datos.gov.co en vivo
+        </div>
 
         <nav>
-            <a href="{% url 'inicio' %}">Inicio</a>
+            <a href="{% url 'inicio' %}" style="color: #38bdf8; font-weight: 600;">Inicio</a>
             <a href="{% url 'estadisticas' %}">Estadísticas</a>
             <a href="#analisis">Análisis</a>
             <a href="#prevencion">Prevención</a>
@@ -178,78 +658,333 @@
     </header>
 
     <section class="hero">
-        <h1>Analizamos la accidentalidad vial en Colombia</h1>
+        <div class="hero-badge">
+            ⚡ Plataforma oficial de analítica vial · Colombia
+        </div>
+
+        <h1>
+            Analizamos la accidentalidad vial en <span class="gradient-text">Colombia</span>
+        </h1>
 
         <p>
             Explora información sobre accidentes de tránsito,
             víctimas, lesiones y fallecimientos. Identifica
-            tendencias y patrones para contribuir a la prevención vial.
+            tendencias y patrones para contribuir a la prevención vial
+            con datos abiertos oficiales en tiempo real.
         </p>
 
-        <button onclick="document.getElementById('estadisticas').scrollIntoView({behavior:'smooth'})">
-            Explorar plataforma
-        </button>
+        <div class="hero-actions">
+            <button class="btn-primary" onclick="document.getElementById('estadisticas').scrollIntoView({behavior:'smooth'})">
+                Explorar plataforma ↓
+            </button>
+            <a href="{% url 'buscar' %}" class="btn-secondary">
+                🔍 Búsqueda avanzada
+            </a>
+            <a href="{% url 'estadisticas' %}" class="btn-secondary">
+                📊 Ver estadísticas
+            </a>
+        </div>
     </section>
 
+    <!-- Indicadores Rápidos KPI -->
+    <div class="kpi-section">
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-number" id="count-vehiculos">450.335+</div>
+                <div class="kpi-label">Vehículos en accidentes</div>
+                <div class="kpi-sub">RUNT · Ley 2251 de 2022</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-number" id="count-fatalidades">98.430+</div>
+                <div class="kpi-label">Víctimas fatales</div>
+                <div class="kpi-sub">Policía Nacional (DIJIN)</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-number" id="count-lesiones">885.829+</div>
+                <div class="kpi-label">Víctimas lesionadas</div>
+                <div class="kpi-sub">Ministerio de Defensa Nacional</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-number">33 Dptos</div>
+                <div class="kpi-label">Cobertura Nacional</div>
+                <div class="kpi-sub">Normalización DANE DIVIPOLA</div>
+            </div>
+        </div>
+    </div>
+
     <main class="container" id="estadisticas">
-        <h2>Bienvenido a AccidentaData</h2>
+        <div class="section-header">
+            <span class="section-tag">Bienvenida y Recorrido</span>
+            <h2>Bienvenido a AccidentaData</h2>
+            <p class="description">
+                Una plataforma de análisis de datos abiertos sobre
+                accidentalidad vial en el territorio colombiano.
+            </p>
+        </div>
 
-        <p class="description">
-            Una plataforma de análisis de datos abiertos sobre
-            accidentalidad vial en el territorio colombiano.
-        </p>
+        <!-- Módulo interactivo de demostración y recorrido guiado -->
+        <section class="tour-section" aria-label="Recorrido de demostración guiado">
+            <div class="tour-header">
+                <div class="tour-title">
+                    <span>🧭</span> Recorrido guiado de la aplicación
+                    <span class="tour-badge">Demostración interactiva</span>
+                </div>
+                <div style="font-size: 13px; color: #64748b;">
+                    Haz clic en cada paso para probar las funcionalidades comprobadas
+                </div>
+            </div>
 
+            <div class="tour-steps-nav">
+                <button class="tour-btn active" onclick="selectTourStep(0)">
+                    <span>1️⃣</span> Fuentes Oficiales
+                </button>
+                <button class="tour-btn" onclick="selectTourStep(1)">
+                    <span>2️⃣</span> Limpieza y Normalización
+                </button>
+                <button class="tour-btn" onclick="selectTourStep(2)">
+                    <span>3️⃣</span> Búsqueda SoQL y Filtros
+                </button>
+                <button class="tour-btn" onclick="selectTourStep(3)">
+                    <span>4️⃣</span> Panel Estadístico
+                </button>
+                <button class="tour-btn" onclick="selectTourStep(4)">
+                    <span>5️⃣</span> Mapa Territorial
+                </button>
+            </div>
+
+            <div class="tour-content-panel" id="tour-panel">
+                <div class="tour-details">
+                    <h4 id="tour-panel-title">1. Fuentes Oficiales de Datos Abiertos (AD-02)</h4>
+                    <p id="tour-panel-desc">
+                        Conexión en vivo con la API pública Socrata de datos.gov.co para consultar 3 conjuntos nacionales: RUNT (vehículos), DIJIN (homicidios) y MinDefensa (lesiones).
+                    </p>
+                    <div class="tour-criteria" id="tour-panel-criteria">
+                        ✓ Criterio: Fuentes atribuidas, licencia CC BY-SA 4.0 y limitaciones explicadas.
+                    </div>
+                </div>
+                <div>
+                    <a href="{% url 'fuentes' %}" class="tour-action-btn" id="tour-panel-btn">
+                        Ver fuentes de datos →
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tarjetas de Funcionalidades Principales -->
         <div class="cards">
             <article class="card">
-                <div class="icon">📊</div>
-                <h3>Estadísticas</h3>
-                <p>
-                    Consulta información sobre accidentes,
-                    víctimas y fallecimientos.
-                </p>
-                <p style="margin-top: 12px;">
-                    <a href="{% url 'estadisticas' %}" style="color: #0284c7; font-weight: bold; text-decoration: none;">Ver panel estadístico →</a>
+                <div>
+                    <div class="icon">📊</div>
+                    <h3>Estadísticas</h3>
+                    <p>
+                        Consulta información sobre accidentes,
+                        víctimas y fallecimientos.
+                    </p>
+                </div>
+                <p style="margin-top: 18px;">
+                    <a href="{% url 'estadisticas' %}" style="color: #0284c7; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                        Ver panel estadístico →
+                    </a>
                 </p>
             </article>
 
             <article class="card" id="analisis">
-                <div class="icon">📈</div>
-                <h3>Análisis de datos</h3>
-                <p>
-                    Identifica tendencias y comportamientos
-                    de la accidentalidad vial.
+                <div>
+                    <div class="icon">📈</div>
+                    <h3>Análisis de datos</h3>
+                    <p>
+                        Identifica tendencias y comportamientos
+                        de la accidentalidad vial mediante normalización de fechas y métricas de calidad.
+                    </p>
+                </div>
+                <p style="margin-top: 18px;">
+                    <a href="{% url 'fuentes' %}?modo=procesado" style="color: #0284c7; font-weight: 700; text-decoration: none;">
+                        Explorar datos procesados →
+                    </a>
                 </p>
             </article>
 
             <article class="card">
-                <div class="icon">🗺️</div>
-                <h3>Mapa de Colombia</h3>
-                <p>
-                    Explora la distribución territorial de
-                    los registros disponibles.
+                <div>
+                    <div class="icon">🗺️</div>
+                    <h3>Mapa de Colombia</h3>
+                    <p>
+                        Explora la distribución territorial de
+                        los registros disponibles a nivel de departamento con coordenadas geográficas.
+                    </p>
+                </div>
+                <p style="margin-top: 18px;">
+                    <a href="{% url 'estadisticas' %}#mapa-territorial" style="color: #0284c7; font-weight: 700; text-decoration: none;">
+                        Ver mapa interactivo →
+                    </a>
                 </p>
             </article>
 
             <article class="card" id="prevencion">
-                <div class="icon">🛡️</div>
-                <h3>Prevención vial</h3>
-                <p>
-                    Identifica zonas y patrones que requieren
-                    atención preventiva.
+                <div>
+                    <div class="icon">🛡️</div>
+                    <h3>Prevención vial</h3>
+                    <p>
+                        Identifica zonas y patrones que requieren
+                        atención preventiva para la toma de decisiones basada en evidencia.
+                    </p>
+                </div>
+                <p style="margin-top: 18px;">
+                    <a href="{% url 'buscar' %}" style="color: #0284c7; font-weight: 700; text-decoration: none;">
+                        Consultar por municipio →
+                    </a>
                 </p>
             </article>
         </div>
 
+        <!-- Mapa interactivo preview de Colombia -->
+        <section class="map-section" id="seccion-mapa">
+            <div class="map-header">
+                <div>
+                    <h3>Distribución territorial en Colombia</h3>
+                    <p class="description" style="font-size: 14px; margin-top: 4px;">
+                        Haz clic en los departamentos para ver sus datos o filtrar directamente.
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'estadisticas' %}" class="tour-action-btn" style="padding: 8px 14px; font-size: 12px;">
+                        Abrir mapa completo con estadísticas →
+                    </a>
+                </div>
+            </div>
+            <div id="colombia-map-preview"></div>
+        </section>
+
         <div class="notice">
-            <strong>Información importante:</strong>
-            Consulta las fuentes oficiales de datos abiertos de Colombia y su resumen estadístico
-            en tiempo real en la sección <a href="{% url 'fuentes' %}">Fuentes de datos</a>.
+            <div>
+                <strong>Información importante:</strong>
+                Consulta las fuentes oficiales de datos abiertos de Colombia y su resumen estadístico
+                en tiempo real en la sección <a href="{% url 'fuentes' %}">Fuentes de datos</a>.
+            </div>
+            <a href="{% url 'fuentes' %}" class="btn-primary" style="padding: 9px 18px; font-size: 13px;">
+                Explorar fuentes oficiales
+            </a>
         </div>
     </main>
 
     <footer>
-        AccidentaData © 2026 | Análisis de accidentalidad vial en Colombia
+        AccidentaData © 2026 | Análisis de accidentalidad vial en Colombia · Licencia CC BY-SA 4.0
     </footer>
 
+    <!-- Leaflet JS para renderizar mapa interactivo de Colombia -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        // Datos del tour interactivo
+        const tourSteps = [
+            {
+                title: "1. Fuentes Oficiales de Datos Abiertos (AD-02)",
+                desc: "Conexión directa en tiempo real con la API Socrata de datos.gov.co. Consulta 3 fuentes nacionales: RUNT (Vehículos), DIJIN (Homicidios) y MinDefensa (Lesiones) con atribución legal y limitaciones.",
+                criteria: "✓ Criterio: Fuentes con enlace oficial, entidad publicadora y licencia CC BY-SA 4.0 documentadas.",
+                btnText: "Ver fuentes de datos →",
+                url: "{% url 'fuentes' %}"
+            },
+            {
+                title: "2. Limpieza y Normalización de Datos (AD-03)",
+                desc: "Transformación de fechas no homogéneas (MM/AAAA, DD/MM/AAAA, ISO) a formato estándar ISO, conversión numérica estricta, limpieza de texto y estandarización a códigos DIVIPOLA/DANE.",
+                criteria: "✓ Criterio: Alternancia interactiva entre datos procesados con métricas de calidad y datos crudos.",
+                btnText: "Comparar Procesado vs Crudo →",
+                url: "{% url 'fuentes' %}?modo=procesado"
+            },
+            {
+                title: "3. Búsqueda y Filtros SoQL en Tiempo Real (AD-04)",
+                desc: "Consultas complejas sobre las colecciones completas en datos.gov.co usando parámetros SoQL seguros, paginación estable, manejo de búsquedas vacías y mensajes de validación.",
+                criteria: "✓ Criterio: Búsquedas con conteos totales de filas y víctimas, manejo de sin coincidencias y entradas inválidas.",
+                btnText: "Realizar búsqueda →",
+                url: "{% url 'buscar' %}"
+            },
+            {
+                title: "4. Panel de Estadísticas y Gráficos Animados (AD-05)",
+                desc: "Cálculo de resúmenes estadísticos automáticos: desgloses porcentuales, promedio por registro, departamento principal y gráficos interactivos con animaciones.",
+                criteria: "✓ Criterio: Indicadores calculados exclusivamente con datos reales sin cifras de ejemplo.",
+                btnText: "Ver panel estadístico →",
+                url: "{% url 'estadisticas' %}"
+            },
+            {
+                title: "5. Visualización Territorial y Mapa (AD-06)",
+                desc: "Representación geográfica sobre el mapa interactivo de Colombia de los 33 departamentos, con marcadores interactivos proporcionales y popups de exploración.",
+                criteria: "✓ Criterio: Mapa funcional y navegación directa a la búsqueda por departamento.",
+                btnText: "Explorar mapa territorial →",
+                url: "{% url 'estadisticas' %}#mapa-territorial"
+            }
+        ];
+
+        function selectTourStep(index) {
+            const step = tourSteps[index];
+            document.getElementById('tour-panel-title').innerText = step.title;
+            document.getElementById('tour-panel-desc').innerText = step.desc;
+            document.getElementById('tour-panel-criteria').innerText = step.criteria;
+            const btn = document.getElementById('tour-panel-btn');
+            btn.innerText = step.btnText;
+            btn.href = step.url;
+
+            const buttons = document.querySelectorAll('.tour-btn');
+            buttons.forEach((b, i) => {
+                if (i === index) {
+                    b.classList.add('active');
+                } else {
+                    b.classList.remove('active');
+                }
+            });
+        }
+
+        // Inicializar mapa de Colombia
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                if (typeof L !== 'undefined' && document.getElementById('colombia-map-preview')) {
+                    const map = L.map('colombia-map-preview', {
+                        center: [4.570868, -74.297333],
+                        zoom: 5,
+                        scrollWheelZoom: false
+                    });
+
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                        attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    }).addTo(map);
+
+                    const departmentsData = {{ departments_summary_json|default:"[]"|safe }};
+
+                    departmentsData.forEach(dept => {
+                        const circle = L.circleMarker([dept.lat, dept.lng], {
+                            radius: 8,
+                            fillColor: '#0284c7',
+                            color: '#ffffff',
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        }).addTo(map);
+
+                        circle.bindPopup(`
+                            <div style="font-family: inherit; font-size: 13px;">
+                                <strong style="color: #0369a1; font-size: 14px;">${dept.name}</strong><br>
+                                <span style="color: #64748b;">Código DANE: ${dept.code}</span><br>
+                                <div style="margin-top: 8px;">
+                                    <a href="{% url 'buscar' %}?fuente=runt_vehicles&buscar=1&departamento=${dept.code}" 
+                                       style="background: #0284c7; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: bold; display: inline-block;">
+                                       Consultar siniestros →
+                                    </a>
+                                </div>
+                            </div>
+                        `);
+
+                        circle.on('mouseover', function() {
+                            this.setRadius(12);
+                            this.setStyle({ fillColor: '#38bdf8' });
+                        });
+                        circle.on('mouseout', function() {
+                            this.setRadius(8);
+                            this.setStyle({ fillColor: '#0284c7' });
+                        });
+                    });
+                }
+            } catch (e) {
+                console.log("Mapa cargado en modo básico:", e);
+            }
+        });
+    </script>
 </body>
 </html>

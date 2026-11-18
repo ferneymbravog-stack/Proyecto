@@ -1,4 +1,5 @@
 import hashlib
+import json
 
 from django.core.cache import cache
 from django.shortcuts import render
@@ -11,13 +12,23 @@ from accidentadata.search.query import InvalidCriteriaError
 from accidentadata.search.service import search
 
 from .forms import SearchForm
+from .geo import build_map_and_charts_payload, DEPARTMENTS_COORDS
 
 SAMPLE_CACHE_SECONDS = 600
 SEARCH_CACHE_SECONDS = 600
 
 
 def inicio(request):
-    return render(request, 'accidentes/inicio.html')
+    # Enriquecer inicio con datasets y mapa base de Colombia para el tour interactivo
+    departments_summary = [
+        {"name": info["name"], "lat": info["lat"], "lng": info["lng"], "code": info["code"]}
+        for info in DEPARTMENTS_COORDS.values()
+    ]
+    context = {
+        'datasets': DATASETS,
+        'departments_summary_json': json.dumps(departments_summary),
+    }
+    return render(request, 'accidentes/inicio.html', context)
 
 
 def _load_source_data(key):
@@ -98,9 +109,12 @@ def estadisticas(request):
 
     result, processed_result, stats_summary = _load_source_data(key)
 
+    visual_payload = build_map_and_charts_payload(stats_summary, key)
+
     context['result'] = result
     context['processed_result'] = processed_result
     context['stats_summary'] = stats_summary
+    context['visual_payload_json'] = json.dumps(visual_payload)
     return render(request, 'accidentes/estadisticas.html', context)
 
 

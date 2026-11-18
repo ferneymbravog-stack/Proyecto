@@ -5,148 +5,224 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estadísticas | AccidentaData</title>
 
+    <!-- Leaflet CSS para visualización territorial de siniestros -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
     <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --primary-light: #38bdf8;
+            --primary-glow: rgba(56, 189, 248, 0.25);
+            --bg-dark: #0b1526;
+            --surface: #ffffff;
+            --surface-alt: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-light: #e2e8f0;
+            --border-subtle: #cbd5e1;
+            --accent-green: #10b981;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
             background: #f4f7fb;
-            color: #172b42;
+            color: var(--text-main);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         header {
-            background: #10243e;
+            background: #0b1526;
             color: white;
-            padding: 22px 8%;
+            padding: 20px 8%;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         }
 
         .logo {
             font-size: 26px;
-            font-weight: bold;
+            font-weight: 800;
             color: white;
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .logo span {
-            color: #38bdf8;
+            color: var(--primary-light);
         }
 
         nav {
             display: flex;
             gap: 25px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         nav a {
-            color: white;
+            color: #cbd5e1;
             text-decoration: none;
             font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
         }
 
         nav a:hover,
         nav a.active {
-            color: #38bdf8;
+            color: var(--primary-light);
         }
 
         .container {
-            padding: 50px 8%;
+            padding: 45px 8% 60px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .header-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 8px;
         }
 
         h1 {
-            font-size: 30px;
-            margin-bottom: 12px;
+            font-size: 32px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.5px;
         }
 
         .description {
             color: #64748b;
             line-height: 1.6;
+            font-size: 15px;
+            max-width: 800px;
         }
 
         .source-tabs {
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
-            margin: 26px 0 20px;
+            margin: 28px 0 24px;
         }
 
         .source-tab {
-            padding: 10px 18px;
-            border-radius: 8px;
+            padding: 11px 20px;
+            border-radius: 10px;
             font-size: 14px;
-            font-weight: bold;
+            font-weight: 700;
             text-decoration: none;
-            background: #e2e8f0;
-            color: #1e293b;
-            border: 1px solid #cbd5e1;
-            transition: all 0.2s;
+            background: white;
+            color: #334155;
+            border: 1px solid var(--border-light);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
         }
 
         .source-tab:hover {
-            background: #cbd5e1;
+            background: #f8fafc;
+            transform: translateY(-2px);
+            border-color: #cbd5e1;
+            color: var(--primary-dark);
         }
 
         .source-tab.active {
-            background: #0284c7;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
             color: white;
             border-color: #0284c7;
-            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+            box-shadow: 0 6px 18px rgba(2, 132, 199, 0.35);
+            transform: translateY(-2px);
         }
 
+        /* Paneles y Tarjetas de Estadísticas */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 22px 0;
         }
 
         .stat-card {
             background: white;
-            padding: 18px;
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            padding: 22px;
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+            transition: transform 0.25s, box-shadow 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 24px rgba(16, 36, 62, 0.08);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #38bdf8, #0284c7);
         }
 
         .stat-card .stat-value {
-            font-size: 26px;
-            font-weight: bold;
-            color: #0284c7;
+            font-size: 28px;
+            font-weight: 800;
+            color: #0369a1;
+            letter-spacing: -0.5px;
         }
 
         .stat-card .stat-label {
             font-size: 13px;
-            color: #64748b;
-            margin-top: 5px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-top: 6px;
         }
 
         .stat-card .stat-sub {
             font-size: 12px;
-            color: #475569;
-            margin-top: 6px;
+            color: #64748b;
+            margin-top: 4px;
         }
 
         .stat-card .stat-value.stat-value-text {
-            font-size: 19px;
+            font-size: 20px;
             line-height: 1.25;
             word-break: break-word;
         }
 
         .stats-panel {
             background: #ffffff;
-            border: 1px solid #cbd5e1;
-            border-radius: 12px;
-            padding: 22px;
-            margin: 22px 0;
-            box-shadow: 0 4px 16px rgba(16, 36, 62, 0.05);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 28px;
+            margin: 24px 0;
+            box-shadow: 0 6px 24px rgba(16, 36, 62, 0.05);
         }
 
         .stats-panel-header {
@@ -155,14 +231,15 @@
             align-items: flex-start;
             flex-wrap: wrap;
             gap: 14px;
-            margin-bottom: 14px;
-            padding-bottom: 14px;
-            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 18px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-light);
         }
 
         .stats-panel-header h3 {
-            font-size: 20px;
-            color: #10243e;
+            font-size: 22px;
+            color: #0f172a;
+            font-weight: 800;
             margin-bottom: 4px;
         }
 
@@ -180,28 +257,29 @@
         .context-badge {
             background: #f1f5f9;
             color: #1e293b;
-            border: 1px solid #cbd5e1;
+            border: 1px solid var(--border-subtle);
             border-radius: 999px;
             padding: 5px 12px;
             font-size: 12px;
+            font-weight: 500;
         }
 
         .stats-context-note {
             font-size: 13px;
-            color: #475569;
-            background: #f8fafc;
-            border-left: 3px solid #0284c7;
-            padding: 10px 14px;
-            border-radius: 4px;
-            margin: 12px 0 18px;
+            color: #334155;
+            background: #f0fdf4;
+            border-left: 3px solid #10b981;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 16px 0 20px;
             line-height: 1.5;
         }
 
         .stats-empty-state {
             background: #f8fafc;
             border: 1px dashed #94a3b8;
-            border-radius: 8px;
-            padding: 18px;
+            border-radius: 12px;
+            padding: 24px;
             color: #334155;
             line-height: 1.6;
         }
@@ -212,30 +290,100 @@
             margin-top: 6px;
         }
 
+        /* Gráficos interactivos animados */
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .chart-box {
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            padding: 22px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+            position: relative;
+        }
+
+        .chart-box h4 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-box p {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 16px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 280px;
+            width: 100%;
+        }
+
+        /* Mapa territorial interactivo */
+        .interactive-map-section {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 25px 0;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        .map-section-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #colombia-stats-map {
+            height: 420px;
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            margin-top: 14px;
+            z-index: 1;
+        }
+
         .summary-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
             gap: 18px;
-            margin-top: 16px;
+            margin-top: 20px;
         }
 
         .breakdown-card {
             background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 16px;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
         }
 
         .breakdown-card h4 {
             font-size: 15px;
             color: #10243e;
             margin-bottom: 4px;
+            font-weight: 700;
         }
 
         .breakdown-meta {
             font-size: 12px;
             color: #64748b;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
             line-height: 1.4;
         }
 
@@ -243,7 +391,7 @@
             list-style: none;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
 
         .breakdown-row {
@@ -267,7 +415,7 @@
 
         .breakdown-value {
             color: #0369a1;
-            font-weight: 600;
+            font-weight: 700;
             white-space: nowrap;
         }
 
@@ -283,19 +431,21 @@
             height: 100%;
             background: linear-gradient(90deg, #0284c7, #38bdf8);
             border-radius: 999px;
+            transition: width 1s ease-out;
         }
 
         .breakdown-footnote {
-            margin-top: 10px;
+            margin-top: 12px;
             font-size: 12px;
             color: #64748b;
         }
 
         .notice {
             margin-top: 25px;
-            padding: 18px 20px;
-            border-radius: 6px;
+            padding: 18px 22px;
+            border-radius: 8px;
             line-height: 1.6;
+            font-size: 14px;
         }
 
         .notice.info {
@@ -315,46 +465,74 @@
         }
 
         .source {
-            margin-top: 15px;
+            margin-top: 18px;
             font-size: 13px;
             color: #64748b;
             line-height: 1.6;
         }
 
         .source a {
-            color: #17618b;
+            color: #0284c7;
+            font-weight: 600;
         }
 
         .action-links {
-            margin-top: 18px;
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
-        .action-links a {
-            display: inline-block;
-            padding: 10px 18px;
-            background: #38bdf8;
-            border-radius: 7px;
-            color: #10243e;
-            font-weight: bold;
+        .action-links a,
+        .btn-copy-summary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 20px;
+            background: #0284c7;
+            border-radius: 8px;
+            color: white;
+            font-weight: 700;
             text-decoration: none;
             font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-copy-summary {
+            background: white;
+            color: #0369a1;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .btn-copy-summary:hover {
+            background: #f1f5f9;
+            transform: translateY(-2px);
+        }
+
+        .action-links a:hover {
+            background: #0369a1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
         }
 
         footer {
-            background: #10243e;
-            color: white;
+            background: #0b1526;
+            color: #94a3b8;
             text-align: center;
-            padding: 25px;
-            margin-top: 40px;
+            padding: 30px;
+            margin-top: 50px;
+            font-size: 14px;
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
             header {
-                padding: 20px 5%;
+                padding: 16px 5%;
             }
 
             .container {
-                padding: 35px 5%;
+                padding: 30px 5% 45px;
             }
         }
     </style>
@@ -374,19 +552,22 @@
     </header>
 
     <main class="container">
-        <h1>Panel de estadísticas</h1>
-
-        <p class="description">
-            Resumen estadístico calculado en tiempo real a partir de los registros oficiales
-            consultados en <a href="https://www.datos.gov.co/">datos.gov.co</a>. Selecciona una fuente
-            para explorar sus indicadores.
-        </p>
+        <div class="header-title-row">
+            <div>
+                <h1>Panel de estadísticas</h1>
+                <p class="description">
+                    Resumen estadístico calculado en tiempo real a partir de los registros oficiales
+                    consultados en <a href="https://www.datos.gov.co/">datos.gov.co</a>. Selecciona una fuente
+                    para explorar sus indicadores, gráficos dinámicos y georreferenciación.
+                </p>
+            </div>
+        </div>
 
         <div class="source-tabs" role="tablist" aria-label="Seleccionar fuente de datos">
             {% for key, dataset in datasets.items %}
                 <a class="source-tab{% if key == selected %} active{% endif %}"
                    href="?fuente={{ key }}">
-                    {{ dataset.name }}
+                    <span>📊</span> {{ dataset.name }}
                 </a>
             {% endfor %}
         </div>
@@ -408,10 +589,46 @@
             {% else %}
                 {% if stats_summary %}
                     {% include "accidentes/includes/stats_panel.html" %}
+
+                    <!-- Gráficos Interactivos con Chart.js -->
+                    <section class="charts-container" aria-label="Visualización gráfica interactiva">
+                        <div class="chart-box">
+                            <h4><span>📈</span> Concentración por Departamento</h4>
+                            <p>Distribución en las principales regiones con registros válidos</p>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-departments"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-box">
+                            <h4><span>🍩</span> Desglose Categórico Principal</h4>
+                            <p id="chart-category-subtitle">Proporción por gravedad, modalidad o grupo</p>
+                            <div class="chart-wrapper">
+                                <canvas id="chart-categories"></canvas>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Mapa Territorial Interactivo de Colombia -->
+                    <section class="interactive-map-section" id="mapa-territorial">
+                        <div class="map-section-title">
+                            <span>🗺️</span> Mapa de Distribución Territorial en Colombia
+                        </div>
+                        <p class="description" style="font-size: 13px;">
+                            Georreferenciación de registros por departamento con marcadores interactivos. Haz clic en un departamento para consultar sus estadísticas o filtrar la búsqueda.
+                        </p>
+                        <div id="colombia-stats-map"></div>
+                    </section>
                 {% endif %}
 
                 <div class="action-links">
                     <a href="{% url 'fuentes' %}?fuente={{ selected }}">Ver tabla de registros</a>
+                    <a href="{% url 'buscar' %}?fuente={{ selected }}" style="background: #38bdf8; color: #0b1526;">
+                        🔍 Búsqueda avanzada de esta fuente
+                    </a>
+                    <button class="btn-copy-summary" onclick="copyStatsSummary()">
+                        📋 Copiar resumen al portapapeles
+                    </button>
                 </div>
             {% endif %}
 
@@ -437,5 +654,181 @@
         AccidentaData © 2026 | Análisis de accidentalidad vial en Colombia
     </footer>
 
+    <!-- Chart.js y Leaflet JS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        const visualData = {{ visual_payload_json|default:"{}"|safe }};
+
+        // Renderizado de Gráficos con Animaciones
+        document.addEventListener('DOMContentLoaded', function() {
+            if (visualData && visualData.has_data) {
+                // 1. Gráfico de Departamentos (Barras Horizontales Animadas)
+                const deptCtx = document.getElementById('chart-departments');
+                if (deptCtx && typeof Chart !== 'undefined' && visualData.departments && visualData.departments.length > 0) {
+                    const topDepts = visualData.departments.slice(0, 8);
+                    new Chart(deptCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: topDepts.map(d => d.name),
+                            datasets: [{
+                                label: visualData.unit || 'Incidentes',
+                                data: topDepts.map(d => d.count),
+                                backgroundColor: [
+                                    'rgba(2, 132, 199, 0.85)',
+                                    'rgba(56, 189, 248, 0.85)',
+                                    'rgba(14, 165, 233, 0.85)',
+                                    'rgba(3, 105, 161, 0.85)',
+                                    'rgba(125, 211, 252, 0.85)',
+                                    'rgba(7, 89, 133, 0.85)',
+                                    'rgba(186, 230, 253, 0.85)',
+                                    'rgba(15, 23, 42, 0.75)'
+                                ],
+                                borderRadius: 6,
+                                borderWidth: 1,
+                                borderColor: '#0284c7'
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            animation: {
+                                duration: 1200,
+                                easing: 'easeOutQuart'
+                            },
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        afterLabel: function(context) {
+                                            const item = topDepts[context.dataIndex];
+                                            return `${item.percentage}% del total`;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    grid: { color: '#f1f5f9' },
+                                    ticks: { font: { family: 'inherit', size: 11 } }
+                                },
+                                y: {
+                                    grid: { display: false },
+                                    ticks: { font: { family: 'inherit', size: 12, weight: 'bold' } }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // 2. Gráfico Categórico (Doughnut / Torta Animada)
+                const catCtx = document.getElementById('chart-categories');
+                if (catCtx && typeof Chart !== 'undefined' && visualData.other_breakdown) {
+                    const breakdown = visualData.other_breakdown;
+                    const subtitle = document.getElementById('chart-category-subtitle');
+                    if (subtitle) {
+                        subtitle.innerText = breakdown.title + ' (' + breakdown.unit + ')';
+                    }
+
+                    new Chart(catCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: breakdown.labels,
+                            datasets: [{
+                                data: breakdown.counts,
+                                backgroundColor: [
+                                    '#0284c7', '#38bdf8', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b'
+                                ],
+                                borderWidth: 2,
+                                borderColor: '#ffffff',
+                                hoverOffset: 8
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            animation: {
+                                animateRotate: true,
+                                animateScale: true,
+                                duration: 1400,
+                                easing: 'easeOutQuart'
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { boxWidth: 12, font: { size: 11 } }
+                                }
+                            },
+                            cutout: '62%'
+                        }
+                    });
+                }
+
+                // 3. Mapa Territorial Interactivo
+                const mapContainer = document.getElementById('colombia-stats-map');
+                if (mapContainer && typeof L !== 'undefined' && visualData.departments) {
+                    const statsMap = L.map('colombia-stats-map', {
+                        center: [4.570868, -74.297333],
+                        zoom: 5,
+                        scrollWheelZoom: false
+                    });
+
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                        attribution: '&copy; CARTO &copy; OpenStreetMap'
+                    }).addTo(statsMap);
+
+                    const maxCount = Math.max(...visualData.departments.map(d => d.count), 1);
+
+                    visualData.departments.forEach(dept => {
+                        const radius = Math.max(7, Math.min(26, Math.sqrt(dept.count / maxCount) * 26));
+
+                        const marker = L.circleMarker([dept.lat, dept.lng], {
+                            radius: radius,
+                            fillColor: '#0284c7',
+                            color: '#ffffff',
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 0.75
+                        }).addTo(statsMap);
+
+                        marker.bindPopup(`
+                            <div style="font-family: inherit; font-size: 13px; line-height: 1.5;">
+                                <strong style="color: #0369a1; font-size: 14px;">${dept.name}</strong><br>
+                                <span style="font-size: 15px; font-weight: 800; color: #0f172a;">${dept.count.toLocaleString()}</span> ${dept.unit}<br>
+                                <span style="color: #64748b; font-size: 12px;">Representa el ${dept.percentage}%</span>
+                                <div style="margin-top: 8px;">
+                                    <a href="{% url 'buscar' %}?fuente={{ selected }}&buscar=1&departamento=${dept.code || ''}" 
+                                       style="background: #0284c7; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 11px; font-weight: bold; display: inline-block;">
+                                       Filtrar en Búsqueda →
+                                    </a>
+                                </div>
+                            </div>
+                        `);
+
+                        marker.on('mouseover', function() {
+                            this.setRadius(radius + 4);
+                            this.setStyle({ fillColor: '#38bdf8', fillOpacity: 0.95 });
+                        });
+                        marker.on('mouseout', function() {
+                            this.setRadius(radius);
+                            this.setStyle({ fillColor: '#0284c7', fillOpacity: 0.75 });
+                        });
+                    });
+                }
+            }
+        });
+
+        function copyStatsSummary() {
+            if (!visualData || !visualData.has_data) return;
+            const text = `Resumen Estadístico - AccidentaData (${visualData.dataset_key})\nTotal: ${visualData.total_metric} ${visualData.unit} en ${visualData.total_records} registros consultados.\nFuente Oficial: datos.gov.co`;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("✓ Resumen estadístico copiado al portapapeles con éxito.");
+            }).catch(e => {
+                console.log(e);
+            });
+        }
+    </script>
 </body>
 </html>

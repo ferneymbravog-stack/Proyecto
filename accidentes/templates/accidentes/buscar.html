@@ -6,182 +6,429 @@
     <title>Buscar registros | AccidentaData</title>
 
     <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --primary-light: #38bdf8;
+            --primary-glow: rgba(56, 189, 248, 0.25);
+            --bg-dark: #0b1526;
+            --surface: #ffffff;
+            --surface-alt: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-light: #e2e8f0;
+            --border-subtle: #cbd5e1;
+            --accent-green: #10b981;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
             background: #f4f7fb;
-            color: #172b42;
+            color: var(--text-main);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes rowFade {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         header {
-            background: #10243e;
+            background: #0b1526;
             color: white;
-            padding: 22px 8%;
+            padding: 20px 8%;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         }
 
         .logo {
             font-size: 26px;
-            font-weight: bold;
+            font-weight: 800;
             color: white;
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .logo span {
-            color: #38bdf8;
+            color: var(--primary-light);
         }
 
         nav {
             display: flex;
             gap: 25px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         nav a {
-            color: white;
+            color: #cbd5e1;
             text-decoration: none;
             font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
         }
 
-        nav a:hover {
-            color: #38bdf8;
+        nav a:hover,
+        nav a.active {
+            color: var(--primary-light);
         }
 
         .container {
-            padding: 50px 8%;
+            padding: 45px 8% 60px;
+            animation: fadeIn 0.4s ease-out;
         }
 
         h1 {
-            font-size: 30px;
+            font-size: 32px;
+            font-weight: 800;
             margin-bottom: 12px;
+            letter-spacing: -0.5px;
+            color: #0f172a;
         }
 
         h2 {
             font-size: 22px;
             margin: 35px 0 12px;
+            font-weight: 800;
+            color: #0f172a;
         }
 
         .description {
             color: #64748b;
             line-height: 1.6;
-        }
-
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 22px;
-            margin-top: 30px;
-        }
-
-        .card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 5px 20px #0000000d;
-            border: 1px solid #e2e8f0;
-        }
-
-        .card.selected {
-            border: 2px solid #17618b;
-        }
-
-        .card h3 {
-            color: #17618b;
-            margin-bottom: 10px;
-            font-size: 17px;
-        }
-
-        .card p,
-        .card li {
-            color: #475569;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        .card a.button {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 10px 18px;
-            background: #38bdf8;
-            border-radius: 7px;
-            color: #10243e;
-            font-weight: bold;
-            text-decoration: none;
-            font-size: 14px;
+            font-size: 15px;
+            max-width: 800px;
         }
 
         .view-modes {
             display: flex;
             gap: 12px;
-            margin: 25px 0 15px;
+            margin: 28px 0 20px;
             flex-wrap: wrap;
             align-items: center;
         }
 
         .mode-btn {
-            padding: 10px 18px;
-            border-radius: 8px;
+            padding: 11px 20px;
+            border-radius: 10px;
             font-size: 14px;
-            font-weight: bold;
+            font-weight: 700;
             text-decoration: none;
-            background: #e2e8f0;
-            color: #1e293b;
-            border: 1px solid #cbd5e1;
-            transition: all 0.2s;
+            background: white;
+            color: #334155;
+            border: 1px solid var(--border-light);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .mode-btn:hover {
-            background: #cbd5e1;
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            transform: translateY(-2px);
+            color: var(--primary-dark);
         }
 
         .mode-btn.active {
-            background: #0284c7;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
             color: white;
             border-color: #0284c7;
-            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+            box-shadow: 0 6px 18px rgba(2, 132, 199, 0.35);
+            transform: translateY(-2px);
+        }
+
+        .search-form {
+            margin-top: 25px;
+            padding: 28px;
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            box-shadow: 0 6px 24px rgba(16, 36, 62, 0.05);
+            position: relative;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .form-field label {
+            display: block;
+            font-weight: 700;
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: #1e293b;
+        }
+
+        .form-field input,
+        .form-field select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            color: #0f172a;
+            transition: all 0.2s;
+        }
+
+        .form-field input:focus,
+        .form-field select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+        }
+
+        .form-field .help {
+            display: block;
+            margin-top: 6px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .form-field .field-error {
+            display: block;
+            margin-top: 6px;
+            font-size: 12px;
+            color: #b91c1c;
+            font-weight: 600;
+        }
+
+        .form-actions {
+            margin-top: 24px;
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .form-actions button {
+            padding: 12px 26px;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-actions button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(2, 132, 199, 0.5);
+        }
+
+        .form-actions a {
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .form-actions a:hover {
+            color: #0f172a;
+            background: #f1f5f9;
+        }
+
+        .chips {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        .chip {
+            background: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+            border-radius: 999px;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            animation: fadeIn 0.3s ease-out;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 22px 0;
         }
 
         .stat-card {
             background: white;
-            padding: 18px;
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 3px;
+            width: 100%;
+            background: linear-gradient(90deg, #38bdf8, #0284c7);
         }
 
         .stat-card .stat-value {
-            font-size: 26px;
-            font-weight: bold;
-            color: #0284c7;
+            font-size: 28px;
+            font-weight: 800;
+            color: #0369a1;
+            letter-spacing: -0.5px;
         }
 
         .stat-card .stat-label {
             font-size: 13px;
             color: #64748b;
+            font-weight: 600;
             margin-top: 5px;
+        }
+
+        .results-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 18px 0 10px;
+        }
+
+        .btn-export {
+            padding: 8px 14px;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-export:hover {
+            background: #f8fafc;
+            color: #0284c7;
+            border-color: #0284c7;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 14px;
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 13px;
+        }
+
+        th,
+        td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-light);
+            white-space: nowrap;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #0f172a;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr {
+            transition: background 0.15s ease;
+        }
+
+        tbody tr:hover {
+            background: #f0f9ff;
+            cursor: pointer;
+        }
+
+        td.null-val {
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .pagination a {
+            color: #0284c7;
+            font-weight: 700;
+            text-decoration: none;
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .pagination a:hover {
+            background: #0284c7;
+            color: white;
+            border-color: #0284c7;
         }
 
         .notice {
             margin-top: 30px;
-            padding: 18px 20px;
-            border-radius: 6px;
+            padding: 18px 22px;
+            border-radius: 8px;
             line-height: 1.6;
+            font-size: 14px;
         }
 
         .notice.info {
@@ -202,167 +449,34 @@
             color: #7f1d1d;
         }
 
-        .notice ul {
-            margin: 8px 0 0 20px;
-        }
-
-        .table-wrapper {
-            overflow-x: auto;
-            margin-top: 15px;
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-        }
-
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            font-size: 13px;
-        }
-
-        th,
-        td {
-            padding: 10px 12px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
-            white-space: nowrap;
-        }
-
-        th {
-            background: #f1f5f9;
-            color: #10243e;
-            font-weight: 600;
-        }
-
-        td.null-val {
-            color: #94a3b8;
-            font-style: italic;
-        }
-
         .source {
-            margin-top: 15px;
+            margin-top: 18px;
             font-size: 13px;
             color: #64748b;
             line-height: 1.6;
         }
 
         .source a {
-            color: #17618b;
+            color: #0284c7;
+            font-weight: 600;
         }
 
         footer {
-            background: #10243e;
-            color: white;
+            background: #0b1526;
+            color: #94a3b8;
             text-align: center;
-            padding: 25px;
-            margin-top: 40px;
-        }
-
-        .search-form {
-            margin-top: 25px;
-            padding: 25px;
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            box-shadow: 0 5px 20px #0000000d;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 18px;
-        }
-
-        .form-field label {
-            display: block;
-            font-weight: bold;
-            font-size: 14px;
-            margin-bottom: 6px;
-        }
-
-        .form-field input,
-        .form-field select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 14px;
-            background: white;
-        }
-
-        .form-field .help {
-            display: block;
-            margin-top: 5px;
-            font-size: 12px;
-            color: #64748b;
-        }
-
-        .form-field .field-error {
-            display: block;
-            margin-top: 5px;
-            font-size: 13px;
-            color: #b91c1c;
-        }
-
-        .form-actions {
-            margin-top: 20px;
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .form-actions button {
-            padding: 11px 22px;
-            background: #38bdf8;
-            border: none;
-            border-radius: 7px;
-            color: #10243e;
-            font-weight: bold;
-            font-size: 14px;
-            cursor: pointer;
-        }
-
-        .form-actions a {
-            color: #17618b;
+            padding: 30px;
+            margin-top: 50px;
             font-size: 14px;
         }
 
-        .chips {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 10px;
-        }
-
-        .chip {
-            background: #e0f2fe;
-            color: #164e63;
-            border-radius: 999px;
-            padding: 5px 12px;
-            font-size: 13px;
-        }
-
-        .pagination {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            margin-top: 15px;
-            font-size: 14px;
-        }
-
-        .pagination a {
-            color: #17618b;
-            font-weight: bold;
-        }
-
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
             header {
-                padding: 20px 5%;
+                padding: 16px 5%;
             }
 
             .container {
-                padding: 35px 5%;
+                padding: 30px 5% 45px;
             }
         }
     </style>
@@ -377,7 +491,7 @@
             <a href="{% url 'inicio' %}">Inicio</a>
             <a href="{% url 'estadisticas' %}">Estadísticas</a>
             <a href="{% url 'fuentes' %}">Fuentes de datos</a>
-            <a href="{% url 'buscar' %}">Buscar</a>
+            <a href="{% url 'buscar' %}" class="active">Buscar</a>
         </nav>
     </header>
 
@@ -402,7 +516,7 @@
             {% for key, dataset in datasets.items %}
                 <a class="mode-btn{% if key == selected %} active{% endif %}"
                    href="?fuente={{ key }}"{% if key == selected %} aria-current="page"{% endif %}>
-                    {{ dataset.name }}
+                    <span>📂</span> {{ dataset.name }}
                 </a>
             {% endfor %}
         </div>
@@ -414,7 +528,7 @@
         {% endif %}
 
         {% if form %}
-            <form class="search-form" method="get" action="{% url 'buscar' %}" novalidate>
+            <form class="search-form" method="get" action="{% url 'buscar' %}" novalidate id="search-form-el">
                 <input type="hidden" name="fuente" value="{{ selected }}">
                 <input type="hidden" name="buscar" value="1">
 
@@ -440,7 +554,9 @@
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit">Buscar</button>
+                    <button type="submit" id="btn-submit-search">
+                        <span>🔍</span> Buscar
+                    </button>
                     <a href="?fuente={{ selected }}">Limpiar filtros</a>
                 </div>
             </form>
@@ -459,7 +575,9 @@
                 {% if active_filters %}
                     <div class="chips" aria-label="Filtros aplicados">
                         {% for label, value in active_filters %}
-                            <span class="chip">{{ label }}: {{ value }}</span>
+                            <span class="chip">
+                                <span>🎯</span> {{ label }}: {{ value }}
+                            </span>
                         {% endfor %}
                     </div>
                 {% else %}
@@ -489,13 +607,18 @@
                         </div>
                     </div>
 
-                    <p class="description">
-                        Mostrando registros {{ result.first_row }} a {{ result.last_row }}
-                        de {{ result.total_rows }}, con los datos normalizados.
-                    </p>
+                    <div class="results-toolbar">
+                        <p class="description" style="margin: 0;">
+                            Mostrando registros {{ result.first_row }} a {{ result.last_row }}
+                            de {{ result.total_rows }}, con los datos normalizados.
+                        </p>
+                        <button class="btn-export" onclick="exportTableToCSV('resultados-accidentadata.csv')">
+                            📥 Descargar página a CSV
+                        </button>
+                    </div>
 
                     <div class="table-wrapper">
-                        <table>
+                        <table id="results-table">
                             <thead>
                                 <tr>
                                     {% for column in result.columns %}
@@ -546,5 +669,42 @@
         AccidentaData © 2026 | Análisis de accidentalidad vial en Colombia
     </footer>
 
+    <script>
+        // Animación de feedback al enviar búsqueda
+        const searchForm = document.getElementById('search-form-el');
+        if (searchForm) {
+            searchForm.addEventListener('submit', function() {
+                const btn = document.getElementById('btn-submit-search');
+                if (btn) {
+                    btn.innerHTML = '<span>⏳</span> Consultando datos.gov.co...';
+                    btn.style.opacity = '0.85';
+                }
+            });
+        }
+
+        // Exportador interactivo a CSV
+        function exportTableToCSV(filename) {
+            const table = document.getElementById("results-table");
+            if (!table) return;
+            const rows = table.querySelectorAll("tr");
+            let csv = [];
+            for (let i = 0; i < rows.length; i++) {
+                let row = [], cols = rows[i].querySelectorAll("td, th");
+                for (let j = 0; j < cols.length; j++) {
+                    let text = cols[j].innerText.replace(/"/g, '""');
+                    row.push('"' + text + '"');
+                }
+                csv.push(row.join(","));
+            }
+            const csvFile = new Blob(["\uFEFF" + csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+            const downloadLink = document.createElement("a");
+            downloadLink.download = filename;
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+            downloadLink.style.display = "none";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+    </script>
 </body>
 </html>
