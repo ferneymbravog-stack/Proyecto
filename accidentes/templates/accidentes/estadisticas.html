@@ -546,6 +546,7 @@
         <nav>
             <a href="{% url 'inicio' %}">Inicio</a>
             <a href="{% url 'estadisticas' %}" class="active">Estadísticas</a>
+            <a href="{% url 'mapa' %}" style="color: #34d399; font-weight: 700;">🗺️ Mapa de Accidentes</a>
             <a href="{% url 'fuentes' %}">Fuentes de datos</a>
             <a href="{% url 'buscar' %}">Buscar</a>
         </nav>
@@ -775,9 +776,14 @@
                         scrollWheelZoom: false
                     });
 
-                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                        attribution: '&copy; CARTO &copy; OpenStreetMap'
+                    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                        maxZoom: 18
                     }).addTo(statsMap);
+
+                    setTimeout(() => {
+                        statsMap.invalidateSize();
+                    }, 300);
 
                     const maxCount = Math.max(...visualData.departments.map(d => d.count), 1);
 

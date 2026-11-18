@@ -12,7 +12,7 @@ from accidentadata.search.query import InvalidCriteriaError
 from accidentadata.search.service import search
 
 from .forms import SearchForm
-from .geo import build_map_and_charts_payload, DEPARTMENTS_COORDS
+from .geo import build_map_and_charts_payload, generate_map_accidents_dataset, DEPARTMENTS_COORDS
 
 SAMPLE_CACHE_SECONDS = 600
 SEARCH_CACHE_SECONDS = 600
@@ -166,3 +166,30 @@ def buscar(request):
     context['result'] = result
     context['active_filters'] = form.active_filters()
     return render(request, 'accidentes/buscar.html', context)
+
+
+def mapa(request):
+    default_key = next(iter(DATASETS))
+    key = request.GET.get('fuente', default_key).strip() or default_key
+    if key not in DATASETS:
+        key = default_key
+
+    result, processed_result, stats_summary = _load_source_data(key)
+    sample_records = getattr(processed_result, 'records', None) if processed_result else None
+
+    accidents_points = generate_map_accidents_dataset(key, sample_records)
+    departments_summary = [
+        {"name": info["name"], "lat": info["lat"], "lng": info["lng"], "code": info["code"]}
+        for info in DEPARTMENTS_COORDS.values()
+    ]
+
+    context = {
+        'datasets': DATASETS,
+        'selected': key,
+        'accidents_json': json.dumps(accidents_points),
+        'departments_summary_json': json.dumps(departments_summary),
+        'total_accidents': len(accidents_points),
+        'fatalities_count': sum(1 for p in accidents_points if p.get('severidad') == 'fatal'),
+        'injuries_count': sum(1 for p in accidents_points if p.get('severidad') != 'fatal'),
+    }
+    return render(request, 'accidentes/mapa.html', context)

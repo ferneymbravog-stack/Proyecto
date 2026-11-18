@@ -650,6 +650,7 @@
         <nav>
             <a href="{% url 'inicio' %}" style="color: #38bdf8; font-weight: 600;">Inicio</a>
             <a href="{% url 'estadisticas' %}">Estadísticas</a>
+            <a href="{% url 'mapa' %}" style="color: #34d399; font-weight: 700;">🗺️ Mapa de Accidentes</a>
             <a href="#analisis">Análisis</a>
             <a href="#prevencion">Prevención</a>
             <a href="{% url 'fuentes' %}">Fuentes de datos</a>
@@ -674,6 +675,9 @@
         </p>
 
         <div class="hero-actions">
+            <a href="{% url 'mapa' %}" class="btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                🗺️ Explorar Mapa de Accidentes en Vivo
+            </a>
             <button class="btn-primary" onclick="document.getElementById('estadisticas').scrollIntoView({behavior:'smooth'})">
                 Explorar plataforma ↓
             </button>
@@ -814,7 +818,7 @@
                     </p>
                 </div>
                 <p style="margin-top: 18px;">
-                    <a href="{% url 'estadisticas' %}#mapa-territorial" style="color: #0284c7; font-weight: 700; text-decoration: none;">
+                    <a href="{% url 'mapa' %}" style="color: #0284c7; font-weight: 700; text-decoration: none;">
                         Ver mapa interactivo →
                     </a>
                 </p>
@@ -847,8 +851,8 @@
                     </p>
                 </div>
                 <div>
-                    <a href="{% url 'estadisticas' %}" class="tour-action-btn" style="padding: 8px 14px; font-size: 12px;">
-                        Abrir mapa completo con estadísticas →
+                    <a href="{% url 'mapa' %}" class="tour-action-btn" style="padding: 8px 14px; font-size: 12px; background: #10b981;">
+                        Abrir mapa completo de accidentes con filtros →
                     </a>
                 </div>
             </div>
@@ -942,9 +946,14 @@
                         scrollWheelZoom: false
                     });
 
-                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                        attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                        maxZoom: 18
                     }).addTo(map);
+
+                    setTimeout(() => {
+                        map.invalidateSize();
+                    }, 300);
 
                     const departmentsData = {{ departments_summary_json|default:"[]"|safe }};
 

@@ -78,3 +78,14 @@ class GeoPayloadTests(TestCase):
         self.assertIsNotNone(payload["other_breakdown"])
         self.assertEqual(payload["other_breakdown"]["title"], "Gravedad del accidente")
         self.assertIn("CON HERIDOS", payload["other_breakdown"]["labels"])
+
+
+class MapaViewTests(TestCase):
+    def test_mapa_view_returns_200_and_contains_elements(self):
+        from django.urls import reverse
+        response = self.client.get(reverse('mapa'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Mapa de Accidentalidad Vial en Colombia')
+        self.assertContains(response, 'id="accidents-map"')
+        self.assertContains(response, 'id="incidents-list"')
+        self.assertContains(response, 'Con Fallecidos')

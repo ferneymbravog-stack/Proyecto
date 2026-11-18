@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Accidentes de Colombia | AccidentaData</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --primary-light: #38bdf8;
+            --bg-dark: #0b1526;
+            --surface: #ffffff;
+            --surface-alt: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-light: #e2e8f0;
+            --border-subtle: #cbd5e1;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: #f1f5f9;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        header {
+            background: #0b1526;
+            color: white;
+            padding: 16px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo span {
+            color: var(--primary-light);
+        }
+
+        nav {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        nav a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        nav a:hover,
+        nav a.active {
+            color: var(--primary-light);
+            font-weight: 700;
+        }
+
+        /* Contenedor Principal del Mapa */
+        .map-app-container {
+            padding: 24px 5% 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .map-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .map-subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        /* Barra de Filtros Rápidos */
+        .map-toolbar {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .filter-btn {
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid var(--border-subtle);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
+        }
+
+        .filter-btn.fatal.active {
+            background: var(--danger);
+            border-color: var(--danger);
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .filter-btn.warning.active {
+            background: var(--warning);
+            border-color: var(--warning);
+            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+            color: #1e293b;
+        }
+
+        .dept-select {
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-subtle);
+            font-size: 13px;
+            font-weight: 600;
+            background: white;
+            color: #0f172a;
+        }
+
+        /* Layout Grid: Mapa y Panel Lateral */
+        .map-layout {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 20px;
+            height: 720px;
+        }
+
+        .map-wrapper {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid var(--border-light);
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+            position: relative;
+            height: 100%;
+        }
+
+        #accidents-map {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Panel Lateral de Accidentes */
+        .sidebar-panel {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border-light);
+            background: #f8fafc;
+        }
+
+        .sidebar-header h3 {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .sidebar-stat-card {
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 8px 12px;
+            text-align: center;
+        }
+
+        .sidebar-stat-val {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .sidebar-stat-val.danger { color: var(--danger); }
+        .sidebar-stat-val.warning { color: var(--warning); }
+
+        .sidebar-stat-lbl {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .sidebar-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .incident-card {
+            background: #f8fafc;
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .incident-card:hover {
+            background: #f0f9ff;
+            border-color: var(--primary-light);
+            transform: translateX(4px);
+        }
+
+        .incident-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .incident-badge {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 999px;
+            text-transform: uppercase;
+        }
+
+        .incident-badge.fatal {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .incident-badge.heridos {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .incident-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .incident-meta {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Leyenda Flotante */
+        .map-legend {
+            position: absolute;
+            bottom: 24px;
+            left: 24px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            padding: 12px 16px;
+            z-index: 500;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            font-size: 12px;
+        }
+
+        .legend-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #0f172a;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+            color: #475569;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        /* Popups Estilizados */
+        .custom-popup {
+            font-family: inherit;
+        }
+
+        .custom-popup h4 {
+            font-size: 14px;
+            color: #0f172a;
+            margin-bottom: 6px;
+            font-weight: 800;
+        }
+
+        .popup-tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .popup-link {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 6px 10px;
+            background: #0284c7;
+            color: white !important;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        @media (max-width: 960px) {
+            .map-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .map-wrapper {
+                height: 520px;
+            }
+
+            .sidebar-panel {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <a class="logo" href="{% url 'inicio' %}">
+            Accidenta<span>Data</span>
+        </a>
+
+        <nav>
+            <a href="{% url 'inicio' %}">Inicio</a>
+            <a href="{% url 'estadisticas' %}">Estadísticas</a>
+            <a href="{% url 'mapa' %}" class="active">🗺️ Mapa de Accidentes</a>
+            <a href="{% url 'fuentes' %}">Fuentes de datos</a>
+            <a href="{% url 'buscar' %}">Buscar</a>
+        </nav>
+    </header>
+
+    <main class="map-app-container">
+        <div class="map-title-row">
+            <div>
+                <h1><span>🗺️</span> Mapa de Accidentalidad Vial en Colombia</h1>
+                <p class="map-subtitle">
+                    Georreferenciación interactiva de siniestros, víctimas y vehículos involucrados a nivel nacional y departamental.
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'buscar' %}?fuente={{ selected }}" class="filter-btn" style="background: #0284c7; color: white;">
+                    🔍 Ir a búsqueda detallada →
+                </a>
+            </div>
+        </div>
+
+        <!-- Barra de Filtros -->
+        <div class="map-toolbar">
+            <div class="toolbar-group">
+                <span class="toolbar-label">Fuente oficial:</span>
+                {% for key, dataset in datasets.items %}
+                    <a href="?fuente={{ key }}" class="filter-btn{% if key == selected %} active{% endif %}">
+                        {{ dataset.name }}
+                    </a>
+                {% endfor %}
+            </div>
+
+            <div class="toolbar-group">
+                <span class="toolbar-label">Severidad:</span>
+                <button class="filter-btn active" onclick="filterBySeverity('all', this)">Todos</button>
+                <button class="filter-btn fatal" onclick="filterBySeverity('fatal', this)">⚠️ Con Fallecidos</button>
+                <button class="filter-btn warning" onclick="filterBySeverity('heridos', this)">🩹 Con Heridos</button>
+
+                <span class="toolbar-label" style="margin-left: 10px;">Enfocar región:</span>
+                <select class="dept-select" id="dept-focus" onchange="focusDepartment(this.value)">
+                    <option value="">-- Seleccionar Departamento --</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Layout Grid -->
+        <div class="map-layout">
+            <!-- Contenedor del Mapa Leaflet -->
+            <div class="map-wrapper">
+                <div id="accidents-map"></div>
+
+                <!-- Leyenda Flotante -->
+                <div class="map-legend">
+                    <div class="legend-title">Severidad del Accidente</div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #ef4444;"></span> Siniestro con Fallecidos
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #f59e0b;"></span> Siniestro con Lesionados
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #0284c7;"></span> Vehículo Involucrado
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel Lateral de Incidentes -->
+            <div class="sidebar-panel">
+                <div class="sidebar-header">
+                    <h3>
+                        <span>📋 Siniestros Mapeados</span>
+                        <span id="badge-total-count" style="font-size: 13px; color: #0284c7;">{{ total_accidents }}</span>
+                    </h3>
+                    <div class="sidebar-stats-row">
+                        <div class="sidebar-stat-card">
+                            <div class="sidebar-stat-val danger" id="stat-fatal">{{ fatalities_count }}</div>
+                            <div class="sidebar-stat-lbl">Fatales</div>
+                        </div>
+                        <div class="sidebar-stat-card">
+                            <div class="sidebar-stat-val warning" id="stat-injuries">{{ injuries_count }}</div>
+                            <div class="sidebar-stat-lbl">Con heridos</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-list" id="incidents-list">
+                    <!-- Rellenado dinámicamente con JavaScript -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        // Datos inyectados desde Django
+        const accidentsData = {{ accidents_json|default:"[]"|safe }};
+        const departmentsData = {{ departments_summary_json|default:"[]"|safe }};
+        let map;
+        let markersGroup;
+        let activeSeverity = 'all';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            populateDepartmentSelect();
+            renderIncidentsList(accidentsData);
+        });
+
+        function initMap() {
+            const mapEl = document.getElementById('accidents-map');
+            if (!mapEl) return;
+
+            // Centrado en el corazón geográfico de Colombia
+            map = L.map('accidents-map', {
+                center: [4.570868, -74.297333],
+                zoom: 6,
+                minZoom: 4,
+                maxZoom: 18
+            });
+
+            // Proveedor principal con fallback: OpenStreetMap estándar confiable
+            const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Capa para los marcadores
+            markersGroup = L.layerGroup().addTo(map);
+
+            // Renderizar los accidentes
+            renderAccidentMarkers(accidentsData);
+
+            // Redibujar tamaño por si el layout tardó en calcular dimensiones
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 300);
+        }
+
+        function renderAccidentMarkers(data) {
+            markersGroup.clearLayers();
+
+            data.forEach((acc) => {
+                if (activeSeverity !== 'all' && acc.severidad !== activeSeverity) {
+                    return;
+                }
+
+                const isFatal = acc.severidad === 'fatal';
+                const fillColor = isFatal ? '#ef4444' : '#f59e0b';
+                const borderColor = isFatal ? '#7f1d1d' : '#92400e';
+
+                const marker = L.circleMarker([acc.lat, acc.lng], {
+                    radius: isFatal ? 9 : 7,
+                    fillColor: fillColor,
+                    color: '#ffffff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.85
+                });
+
+                const popupContent = `
+                    <div class="custom-popup" style="font-size: 13px; line-height: 1.5;">
+                        <span class="popup-tag" style="background: ${isFatal ? '#fee2e2' : '#fef3c7'}; color: ${isFatal ? '#b91c1c' : '#92400e'};">
+                            ${acc.gravedad}
+                        </span>
+                        <h4>${acc.municipio} (${acc.departamento})</h4>
+                        <div><strong>Tipo de vehículo / medio:</strong> ${acc.tipo_vehiculo}</div>
+                        <div><strong>Fecha / Periodo:</strong> ${acc.fecha}</div>
+                        <div><strong>Afectados / Cantidad:</strong> ${acc.cantidad}</div>
+                        <a href="{% url 'buscar' %}?fuente={{ selected }}&buscar=1&municipio=${encodeURIComponent(acc.municipio)}" class="popup-link">
+                            Filtrar este municipio →
+                        </a>
+                    </div>
+                `;
+
+                marker.bindPopup(popupContent);
+
+                // Efectos hover dinámicos
+                marker.on('mouseover', function() {
+                    this.setRadius(isFatal ? 13 : 11);
+                    this.setStyle({ fillOpacity: 1 });
+                });
+                marker.on('mouseout', function() {
+                    this.setRadius(isFatal ? 9 : 7);
+                    this.setStyle({ fillOpacity: 0.85 });
+                });
+
+                markersGroup.addLayer(marker);
+                acc._marker = marker;
+            });
+        }
+
+        function renderIncidentsList(data) {
+            const listEl = document.getElementById('incidents-list');
+            if (!listEl) return;
+            listEl.innerHTML = '';
+
+            const filtered = data.filter(acc => activeSeverity === 'all' || acc.severidad === activeSeverity);
+
+            filtered.forEach(acc => {
+                const card = document.createElement('div');
+                card.className = 'incident-card';
+                const isFatal = acc.severidad === 'fatal';
+
+                card.innerHTML = `
+                    <div class="incident-header">
+                        <span class="incident-title">${acc.municipio}</span>
+                        <span class="incident-badge ${acc.severidad}">${isFatal ? 'Fatal' : 'Heridos'}</span>
+                    </div>
+                    <div class="incident-meta">
+                        <span>${acc.departamento}</span>
+                        <span>${acc.tipo_vehiculo}</span>
+                    </div>
+                    <div class="incident-meta" style="margin-top: 2px;">
+                        <span>Fecha: ${acc.fecha}</span>
+                        <span style="font-weight: bold; color: ${isFatal ? '#ef4444' : '#f59e0b'};">${acc.cantidad} víctimas/veh.</span>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => {
+                    if (map && acc._marker) {
+                        map.flyTo([acc.lat, acc.lng], 12, { duration: 1.2 });
+                        setTimeout(() => {
+                            acc._marker.openPopup();
+                        }, 1200);
+                    }
+                });
+
+                listEl.appendChild(card);
+            });
+
+            document.getElementById('badge-total-count').innerText = filtered.length;
+        }
+
+        function filterBySeverity(severity, btn) {
+            activeSeverity = severity;
+            document.querySelectorAll('.map-toolbar .filter-btn').forEach(b => {
+                if (b.innerText.toLowerCase().includes('todos') || 
+                    b.innerText.toLowerCase().includes('fallecidos') || 
+                    b.innerText.toLowerCase().includes('heridos')) {
+                    b.classList.remove('active');
+                }
+            });
+            btn.classList.add('active');
+
+            renderAccidentMarkers(accidentsData);
+            renderIncidentsList(accidentsData);
+        }
+
+        function populateDepartmentSelect() {
+            const sel = document.getElementById('dept-focus');
+            if (!sel) return;
+            departmentsData.sort((a, b) => a.name.localeCompare(b.name));
+            departmentsData.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = `${d.lat},${d.lng}`;
+                opt.innerText = d.name;
+                sel.appendChild(opt);
+            });
+        }
+
+        function focusDepartment(val) {
+            if (!val || !map) return;
+            const parts = val.split(',');
+            const lat = parseFloat(parts[0]);
+            const lng = parseFloat(parts[1]);
+            map.flyTo([lat, lng], 8, { duration: 1.5 });
+        }
+    </script>
+</body>
+</html>
